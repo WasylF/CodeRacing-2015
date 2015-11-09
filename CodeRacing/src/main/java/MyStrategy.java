@@ -1,46 +1,34 @@
+
 import model.Car;
 import model.Game;
 import model.Move;
 import model.World;
 
 import static java.lang.StrictMath.*;
+import main.java.StrategyBuggy1x4;
+import main.java.StrategyWslF;
+import model.CarType;
 
 public final class MyStrategy implements Strategy {
+
+    private static int typeOfStrategy = 0;
+    private static StrategyWslF myStrategy;
+
     @Override
     public void move(Car self, World world, Game game, Move move) {
-        double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
-        double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
-
-        double cornerTileOffset = 0.25D * game.getTrackTileSize();
-
-        switch (world.getTilesXY()[self.getNextWaypointX()][self.getNextWaypointY()]) {
-            case LEFT_TOP_CORNER:
-                nextWaypointX += cornerTileOffset;
-                nextWaypointY += cornerTileOffset;
-                break;
-            case RIGHT_TOP_CORNER:
-                nextWaypointX -= cornerTileOffset;
-                nextWaypointY += cornerTileOffset;
-                break;
-            case LEFT_BOTTOM_CORNER:
-                nextWaypointX += cornerTileOffset;
-                nextWaypointY -= cornerTileOffset;
-                break;
-            case RIGHT_BOTTOM_CORNER:
-                nextWaypointX -= cornerTileOffset;
-                nextWaypointY -= cornerTileOffset;
-                break;
-            default:
+        if (typeOfStrategy == 0) {
+            if (world.getPlayers().length == 4) {//Buggy1x4 || Jeep1x4
+                if (world.getCars()[0].getType() == CarType.BUGGY) {
+                    typeOfStrategy = 1;
+                    myStrategy = new StrategyBuggy1x4();
+                } else {
+                    typeOfStrategy = 2;
+                }
+            } else {// Buggy and Jeep2x2
+                typeOfStrategy = 3;
+            }
         }
 
-        double angleToWaypoint = self.getAngleTo(nextWaypointX, nextWaypointY);
-        double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
-
-        move.setWheelTurn(angleToWaypoint * 32.0D / PI);
-        move.setEnginePower(0.75D);
-
-        if (speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
-            move.setBrake(true);
-        }
+        myStrategy.move(self, world, game, move);
     }
 }
