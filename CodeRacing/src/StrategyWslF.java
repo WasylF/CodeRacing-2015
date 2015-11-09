@@ -1,5 +1,3 @@
-package main.java;
-
 import model.Car;
 import model.Game;
 import model.Move;

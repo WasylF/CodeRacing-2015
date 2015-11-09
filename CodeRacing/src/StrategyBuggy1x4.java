@@ -1,5 +1,3 @@
-package main.java;
-
 import static java.lang.StrictMath.PI;
 import static java.lang.StrictMath.abs;
 import static java.lang.StrictMath.hypot;
