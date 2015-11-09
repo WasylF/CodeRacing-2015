@@ -4,8 +4,6 @@ import model.Move;
 import model.World;
 
 import static java.lang.StrictMath.*;
-import main.java.StrategyBuggy1x4;
-import main.java.StrategyWslF;
 import model.CarType;
 
 public final class MyStrategy implements Strategy {
