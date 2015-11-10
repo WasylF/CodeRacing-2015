@@ -1,7 +1,6 @@
 
-import static java.lang.StrictMath.PI;
-import static java.lang.StrictMath.abs;
-import static java.lang.StrictMath.hypot;
+import java.lang.*;
+import static java.lang.StrictMath.*;
 import model.Car;
 import model.Game;
 import model.Move;
@@ -14,8 +13,8 @@ import model.World;
 public class StrategyBuggy1x4 extends StrategyWslF {
 
     public void move(Car self, World world, Game game, Move move) {
-        super.move(self, world, game, move);
-
+//        super.move(self, world, game, move);
+        initAll(self, world, game, move);
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
 
@@ -45,9 +44,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
 
         move.setWheelTurn(angleToWaypoint * 32.0D / PI);
-
         move.setEnginePower(0.75D);
-
+        
+        int[][] curTile= getCurTile();
+        
         if (speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
             move.setBrake(true);
         }
@@ -57,14 +57,71 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     int[][] getCurTile() {
         int[][] curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
 
-        int carX = (int) (self.getX() - curTileX * game.getTrackTileSize() + 0.1);
-        int carY = (int) (self.getY() - curTileY * game.getTrackTileSize() + 0.1);
-        
-        double angle = self.getAngle();
-        int carWidth= (int) self.getWidth();
-        int carHeight= (int) self.getHeight();
-        
-        
+        Point[] rectangleCar = getCarVertexCoordinates();
+        Point minP = new Point();
+        Point maxP = new Point();
+        getMinMaxCoordinates(rectangleCar, minP, maxP);
+        int xMin, xMax, yMin, yMax;
+        xMin = max((int) minP.x - 1, 0);
+        yMin = max((int) minP.y - 1, 0);
+        xMax = min((int) maxP.x + 1, (int) game.getTrackTileSize() - 1);
+        yMax = min((int) maxP.y + 1, (int) game.getTrackTileSize() - 1);
+
+        for (int i = xMin; i <= xMax; i++) {
+            for (int j = yMin; j <= yMax; j++) {
+                Point p = new Point(i, j);
+                if (p.checkPointInPolygon(rectangleCar)) {
+                    curTile[i][j] = selfCar;
+                }
+            }
+        }
         return curTile;
     }
+
+    private void getMinMaxCoordinates(Point[] polygon, Point minP, Point maxP) {
+        double xMin, xMax, yMin, yMax;
+        xMin = polygon[0].x;
+        xMax = polygon[0].x;
+        yMin = polygon[0].y;
+        yMax = polygon[0].y;
+        for (Point p : polygon) {
+            if (p.x < xMin) {
+                xMin = p.x;
+            } else if (p.x > xMax) {
+                xMax = p.x;
+            }
+
+            if (p.y < yMin) {
+                yMin = p.y;
+            } else if (p.y > yMax) {
+                yMax = p.y;
+            }
+        }
+
+        minP.x = xMin;
+        minP.y = yMin;
+        maxP.x = xMax;
+        maxP.y = yMax;
+    }
+
+    private Point[] getCarVertexCoordinates() {
+        Point carCenter = new Point(self.getX() - curTileX * game.getTrackTileSize(), self.getY() - curTileY * game.getTrackTileSize());
+        int carX = (int) (carCenter.x + 0.1);
+        int carY = (int) (carCenter.y + 0.1);
+
+        double angle = -self.getAngle();
+        int carWidth = (int) self.getWidth();
+        int carHeight = (int) self.getHeight();
+
+        Point a = new Point(carCenter.x - carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
+                carCenter.y - carHeight * cos(angle) / 2 + carWidth * cos(angle) / 2);
+        Point b = new Point(carCenter.x + carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
+                carCenter.y + carHeight * sin(angle) / 2 + carWidth * cos(angle) / 2);
+
+        Point c = a.getSymmetric(carCenter);
+        Point d = b.getSymmetric(carCenter);
+
+        return new Point[]{a, b, c, d};
+    }
+
 }
