@@ -23,8 +23,8 @@ public class TileToMatrix {
     private int tileMargin;
 
     private int[][] ans;
-    private final int empty= 0;
-    private final int wall= -100;
+    private final int empty= StrategyWslF.empty;
+    private final int wall=  StrategyWslF.wall;
     
     public TileToMatrix(World world, Game game, Move move, Car car) {
         init(world, game, move, car, (int) (game.getTrackTileSize() + 0.1), (int) (game.getTrackTileMargin() + 0.1));

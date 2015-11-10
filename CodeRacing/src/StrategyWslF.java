@@ -11,6 +11,12 @@ import model.World;
  */
 public class StrategyWslF {
 
+    //constants below
+    public static final int selfCar = -1;
+    public static final int empty = 0;
+    public static final int wall = -100;
+//end constants
+
     /**
      * convert tile to matrix 800x800 with margin 80
      */
@@ -31,19 +37,19 @@ public class StrategyWslF {
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
         /*
-        {
-            //int[][] curTile = tileToMatrix.getMatrix(TileType.LEFT_TOP_CORNER);
-            int[][] curTile = tileToMatrix80.getMatrix(TileType.CROSSROADS);
-            for (int i= 0; i<80; i++)
-            {
-                for (int j= 0; j<80; j++)
-                {
-                    System.out.print(curTile[i][j]);
-                }
-                System.out.println();
-            }
-        }*/
-        
+         {
+         //int[][] curTile = tileToMatrix.getMatrix(TileType.LEFT_TOP_CORNER);
+         int[][] curTile = tileToMatrix80.getMatrix(TileType.CROSSROADS);
+         for (int i= 0; i<80; i++)
+         {
+         for (int j= 0; j<80; j++)
+         {
+         System.out.print(curTile[i][j]);
+         }
+         System.out.println();
+         }
+         }*/
+
         TileType[][] mapTiles = world.getTilesXY();
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
