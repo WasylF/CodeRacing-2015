@@ -111,12 +111,13 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                                     curTile[x+i][y+j]= curTile[x][y]+1;
                                     q.add((x+i)*tileSize+y+j);
                                 }
-                              
                             }
                         }
                     }
                 }
             }
+            
+            return tileSize;
         }
     }
 
