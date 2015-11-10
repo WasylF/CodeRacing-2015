@@ -1,3 +1,4 @@
+
 import model.Car;
 import model.Game;
 import model.Move;
@@ -13,17 +14,21 @@ public final class MyStrategy implements Strategy {
 
     @Override
     public void move(Car self, World world, Game game, Move move) {
-        if (typeOfStrategy == 0) {
-            if (world.getPlayers().length == 4) {//Buggy1x4 || Jeep1x4
-                if (world.getCars()[0].getType() == CarType.BUGGY) {
-                    typeOfStrategy = 1;
-                    myStrategy = new StrategyBuggy1x4();
-                } else {
-                    typeOfStrategy = 2;
-                }
-            } else {// Buggy and Jeep2x2
-                typeOfStrategy = 3;
-            }
+        /*
+         if (typeOfStrategy == 0) {
+         if (world.getPlayers().length == 4) {//Buggy1x4 || Jeep1x4
+         if (world.getCars()[0].getType() == CarType.BUGGY) {
+         typeOfStrategy = 1;
+         myStrategy = new StrategyBuggy1x4();
+         } else {
+         typeOfStrategy = 2;
+         }
+         } else {// Buggy and Jeep2x2
+         typeOfStrategy = 3;
+         }
+         }*/
+        if (myStrategy == null) {
+            myStrategy = new StrategyBuggy1x4();
         }
 
         myStrategy.move(self, world, game, move);
