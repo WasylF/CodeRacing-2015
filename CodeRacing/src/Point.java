@@ -68,6 +68,11 @@ public class Point extends Object {
         return -1;
     }
 
+    /**
+     * check does point belong to polygon
+     * @param polygon
+     * @return true if belomgs
+     */
     public boolean checkPointInPolygon(Point[] polygon) {
         int plus;
         plus = 0;
@@ -94,4 +99,14 @@ public class Point extends Object {
         return (plus == 0 || plus == polygon.length);
     }
 
+    /**
+     * AX - segment, M belongs AX && AM=MX
+     * A - this point, M - middle
+     * @param middle
+     * @return X
+     */
+    public Point getSymmetric(Point middle)
+    {
+        return new Point(2*middle.x - x, 2*middle.y - y);
+    }
 }
