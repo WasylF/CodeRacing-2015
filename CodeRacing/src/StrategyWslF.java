@@ -35,7 +35,17 @@ public class StrategyWslF {
     int curTileY;
 
     public void move(Car self, World world, Game game, Move move) {
-        initAll(self, world, game, move);
+    }
+
+    protected void initAll(Car self, World world, Game game, Move move) {
+        this.self = self;
+        this.world = world;
+        this.game = game;
+        this.move = move;
+
+        tileToMatrix = new TileToMatrix(world, game, move, self);
+        tileToMatrix80 = new TileToMatrix(world, game, move, self, 80, 8);
+
         /*
          {
          //int[][] curTile = tileToMatrix.getMatrix(TileType.LEFT_TOP_CORNER);
@@ -50,19 +60,8 @@ public class StrategyWslF {
          }
          }*/
 
-        TileType[][] mapTiles = world.getTilesXY();
+        mapTiles = world.getTilesXY();
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
-
-    }
-
-    private void initAll(Car self, World world, Game game, Move move) {
-        this.self = self;
-        this.world = world;
-        this.game = game;
-        this.move = move;
-
-        tileToMatrix = new TileToMatrix(world, game, move, self);
-        tileToMatrix80 = new TileToMatrix(world, game, move, self, 80, 8);
     }
 }
