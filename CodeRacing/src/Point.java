@@ -44,6 +44,11 @@ public class Point extends Object {
         return y < yLine;
     }
 
+    public double getAngleToOX()
+    {
+     return (Math.atan2(x, -y) -  Math.atan2(1, 0));  
+    }
+    
     public void printVector() {
         double v = Math.hypot(x, y);
         if (y != 0) {
