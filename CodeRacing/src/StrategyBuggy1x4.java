@@ -13,17 +13,17 @@ import model.World;
  * @author Wsl_F
  */
 public class StrategyBuggy1x4 extends StrategyWslF {
-
+    
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
-
+        
         int[][] curTile = getCurTile();
-
+        
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
-
+        
         double cornerTileOffset = 0.25D * game.getTrackTileSize();
-
+        
         switch (world.getTilesXY()[self.getNextWaypointX()][self.getNextWaypointY()]) {
             case LEFT_TOP_CORNER:
                 nextWaypointX += cornerTileOffset;
@@ -43,19 +43,36 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 break;
             default:
         }
-
+        
         double angleToWaypoint = self.getAngleTo(nextWaypointX, nextWaypointY);
         double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
-
+        
         move.setWheelTurn(angleToWaypoint * 32.0D / PI);
-        move.setEnginePower(0.75D);
-
+        int distanceToWall = getDistanceToWall(curTile);
+        if (distanceToWall >= self.getHeight() / 4) {
+            move.setEnginePower(1.0D);
+            if (distanceToWall >= tileSize / 2 && speedModule > 0) {
+                move.setUseNitro(true);
+            }
+        } else {
+            if (distanceToWall > self.getHeight() / 8) {
+                move.setEnginePower(0.85D);
+            } else {
+                move.setEnginePower(0.5D);
+            }
+        }
+        
+        if (world.getTick() % 555 == 0) {
+            move.setThrowProjectile(true);
+            move.setSpillOil(true);
+        }
+        
         if (speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
             move.setBrake(true);
         }
-
+        
     }
-
+    
     int getDistanceToWall(int[][] curTile) {
         Point carSpeed = new Point(self.getSpeedX(), self.getSpeedY());
         carSpeed.normalize();
@@ -73,7 +90,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             } catch (Exception ex) {
                 k = 1;
             }
-
+            
             int count = 0;
             while (x < tileSize && y < tileSize && x >= 0 && y >= 0
                     && (curTile[x][y] == selfCar
@@ -88,11 +105,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                     count = 1;
                 }
             }
-
+            
             if (x == tileSize || y == tileSize || x <= 0 || y <= 0) {
                 return tileSize;
             }
-
+            
             curTile[x][y] = 1;
             Queue<Integer> q = new LinkedBlockingQueue<>();
             q.add(x * tileSize + y);
@@ -106,10 +123,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                             if (x + i >= 0 && x + i < tileSize && y + j >= 0 && y + i < tileSize) {
                                 if (curTile[x + i][y + j] == wall) {
                                     return curTile[x][y];
-                                } 
-                                if (curTile[x+i][y+j] == empty) {
-                                    curTile[x+i][y+j]= curTile[x][y]+1;
-                                    q.add((x+i)*tileSize+y+j);
+                                }
+                                if (curTile[x + i][y + j] == empty) {
+                                    curTile[x + i][y + j] = curTile[x][y] + 1;
+                                    q.add((x + i) * tileSize + y + j);
                                 }
                             }
                         }
@@ -120,10 +137,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return tileSize;
         }
     }
-
+    
     int[][] getCurTile() {
         int[][] curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
-
+        
         Point[] rectangleCar = getCarVertexCoordinates();
         Point minP = new Point();
         Point maxP = new Point();
@@ -133,7 +150,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         yMin = max((int) minP.y - 1, 0);
         xMax = min((int) maxP.x + 1, (int) game.getTrackTileSize() - 1);
         yMax = min((int) maxP.y + 1, (int) game.getTrackTileSize() - 1);
-
+        
         for (int i = xMin; i <= xMax; i++) {
             for (int j = yMin; j <= yMax; j++) {
                 Point p = new Point(i, j);
@@ -144,7 +161,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
         return curTile;
     }
-
+    
     private void getMinMaxCoordinates(Point[] polygon, Point minP, Point maxP) {
         double xMin, xMax, yMin, yMax;
         xMin = polygon[0].x;
@@ -157,20 +174,20 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             } else if (p.x > xMax) {
                 xMax = p.x;
             }
-
+            
             if (p.y < yMin) {
                 yMin = p.y;
             } else if (p.y > yMax) {
                 yMax = p.y;
             }
         }
-
+        
         minP.x = xMin;
         minP.y = yMin;
         maxP.x = xMax;
         maxP.y = yMax;
     }
-
+    
     private Point[] getCarVertexCoordinates() {
         Point carCenter = new Point(self.getX() - curTileX * game.getTrackTileSize(), self.getY() - curTileY * game.getTrackTileSize());
         //int carX = (int) (carCenter.x + 0.1);
@@ -179,16 +196,16 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double angle = -self.getAngle();
         int carWidth = (int) self.getWidth();
         int carHeight = (int) self.getHeight();
-
+        
         Point a = new Point(carCenter.x - carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
                 carCenter.y - carHeight * cos(angle) / 2 + carWidth * cos(angle) / 2);
         Point b = new Point(carCenter.x + carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
                 carCenter.y + carHeight * sin(angle) / 2 + carWidth * cos(angle) / 2);
-
+        
         Point c = a.getSymmetric(carCenter);
         Point d = b.getSymmetric(carCenter);
-
+        
         return new Point[]{a, b, c, d};
     }
-
+    
 }
