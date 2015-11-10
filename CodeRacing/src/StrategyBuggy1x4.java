@@ -1,3 +1,4 @@
+
 import static java.lang.StrictMath.PI;
 import static java.lang.StrictMath.abs;
 import static java.lang.StrictMath.hypot;
@@ -13,6 +14,8 @@ import model.World;
 public class StrategyBuggy1x4 extends StrategyWslF {
 
     public void move(Car self, World world, Game game, Move move) {
+        super.move(self, world, game, move);
+
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
 
@@ -42,11 +45,26 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
 
         move.setWheelTurn(angleToWaypoint * 32.0D / PI);
+
         move.setEnginePower(0.75D);
 
         if (speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
             move.setBrake(true);
         }
 
+    }
+
+    int[][] getCurTile() {
+        int[][] curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
+
+        int carX = (int) (self.getX() - curTileX * game.getTrackTileSize() + 0.1);
+        int carY = (int) (self.getY() - curTileY * game.getTrackTileSize() + 0.1);
+        
+        double angle = self.getAngle();
+        int carWidth= (int) self.getWidth();
+        int carHeight= (int) self.getHeight();
+        
+        
+        return curTile;
     }
 }
