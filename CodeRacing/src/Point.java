@@ -44,11 +44,10 @@ public class Point extends Object {
         return y < yLine;
     }
 
-    public double getAngleToOX()
-    {
-     return (Math.atan2(x, -y) -  Math.atan2(1, 0));  
+    public double getAngleToOX() {
+        return (Math.atan2(x, -y) - Math.atan2(1, 0));
     }
-    
+
     public void printVector() {
         double v = Math.hypot(x, y);
         if (y != 0) {
@@ -60,6 +59,14 @@ public class Point extends Object {
 
     public double multiplyVectors(Point p2) {
         return x * p2.y - y * p2.x;
+    }
+
+    public void normalize() {
+        double length = Math.hypot(x, y);
+        if (length > 1e-6) {
+            x /= length;
+            y /= length;
+        }
     }
 
     public int sgnMultiplyVectors(Point p2) {
@@ -75,6 +82,7 @@ public class Point extends Object {
 
     /**
      * check does point belong to polygon
+     *
      * @param polygon
      * @return true if belomgs
      */
@@ -91,7 +99,7 @@ public class Point extends Object {
                     plus++;
             }
         }
-        
+
         Point v = new Point(polygon[0].x - polygon[polygon.length - 1].x, polygon[0].y - polygon[polygon.length - 1].y);
         Point vP = new Point(x - polygon[polygon.length - 1].x, y - polygon[polygon.length - 1].y);
         switch (v.sgnMultiplyVectors(vP)) {
@@ -105,13 +113,12 @@ public class Point extends Object {
     }
 
     /**
-     * AX - segment, M belongs AX && AM=MX
-     * A - this point, M - middle
+     * AX - segment, M belongs AX && AM=MX A - this point, M - middle
+     *
      * @param middle
      * @return X
      */
-    public Point getSymmetric(Point middle)
-    {
-        return new Point(2*middle.x - x, 2*middle.y - y);
+    public Point getSymmetric(Point middle) {
+        return new Point(2 * middle.x - x, 2 * middle.y - y);
     }
 }
