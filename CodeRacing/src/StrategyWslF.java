@@ -33,7 +33,11 @@ public class StrategyWslF {
     TileType[][] mapTiles;
     int curTileX;
     int curTileY;
-
+    int selfX;
+    int selfY;
+    int tileSize;
+    int marginSize;
+    
     public void move(Car self, World world, Game game, Move move) {
     }
 
@@ -59,9 +63,12 @@ public class StrategyWslF {
          System.out.println();
          }
          }*/
-
         mapTiles = world.getTilesXY();
+        tileSize= (int) (game.getTrackTileSize() + 0.1);
+        marginSize= (int) (game.getTrackTileMargin() + 0.1);
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
+        selfX = (int) (self.getX()) % tileSize;
+        selfY = (int) (self.getY()) % tileSize;
     }
 }
