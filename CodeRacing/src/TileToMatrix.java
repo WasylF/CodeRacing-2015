@@ -23,28 +23,26 @@ public class TileToMatrix {
     private int tileMargin;
 
     private int[][] ans;
-    private final int empty= StrategyWslF.empty;
-    private final int wall=  StrategyWslF.wall;
-    
+    private final int empty = StrategyWslF.empty;
+    private final int wall = StrategyWslF.wall;
+
     public TileToMatrix(World world, Game game, Move move, Car car) {
         init(world, game, move, car, (int) (game.getTrackTileSize() + 0.1), (int) (game.getTrackTileMargin() + 0.1));
     }
-    
+
     public TileToMatrix(World world, Game game, Move move, Car car, int tileSize, int tileMargin) {
         init(world, game, move, car, tileSize, tileMargin);
     }
-    
-    private void init(World world, Game game, Move move, Car car, int tileSize, int tileMargin)
-    {
+
+    private void init(World world, Game game, Move move, Car car, int tileSize, int tileMargin) {
         this.world = world;
         this.game = game;
         this.move = move;
         this.car = car;
-        this.tileSize = tileSize; 
-        this.tileMargin = tileMargin;;        
+        this.tileSize = tileSize;
+        this.tileMargin = tileMargin;;
         ans = new int[tileSize][tileSize];
     }
-    
 
     /**
      * возвращает квадратную матрицу 800х800, где 1 значит, что в клетку нельзя
@@ -109,7 +107,7 @@ public class TileToMatrix {
         for (int i = 0; i < tileSize; i++) {
             for (int j = 0; j < tileSize; j++) {
                 if (j <= tileMargin || tileSize - j <= tileMargin) {
-                    ans[i][j] = 1;
+                    ans[i][j] = wall;
                 } else {
                     ans[i][j] = empty;
                 }
@@ -128,7 +126,7 @@ public class TileToMatrix {
             for (int j = i; j + i < tileSize; j++) {
                 int t1 = ans[i][j];
                 int t2 = ans[i][tileSize - 1 - j];
-                int t3 = ans[tileSize - 1 -i][tileSize - 1 - j];
+                int t3 = ans[tileSize - 1 - i][tileSize - 1 - j];
                 int t4 = ans[tileSize - 1 - i][j];
 
                 ans[i][j] = t4;
@@ -143,11 +141,11 @@ public class TileToMatrix {
         rotate90();
         rotate90();
     }
-    
+
     private void rotate270() {
         rotate90();
         rotate90();
-        rotate90();        
+        rotate90();
     }
 
     private void getLeftTopCorner() {
@@ -175,40 +173,43 @@ public class TileToMatrix {
         cutCorner(tileMargin, tileMargin, false);
 
         // отрезаем правый нижний угол
-        cutCorner(tileSize-1, tileSize-1, true);
-    }
-    
-    
-    /**
-     * заполняем уголок (треугольный) стенами, радиус равен tileMargin 
-     * правей и ниже || левей и выше
-     * @param x абсцисса центра угла
-     * @param y ордината центра угла
-     * @param invert 1 - заполняем сверху от центра, 0 - снизу
-     */
-    private void cutCorner(int x, int y, boolean invert)
-    {
-        int t= invert ? -1 : 1;
-        for (int i= 0; i<=tileMargin; i++)
-            for (int j= 0; i+j<=tileMargin; j++)
-                ans[x+t*i][y+t*j]= 1;
+        cutCorner(tileSize - 1, tileSize - 1, true);
     }
 
     /**
-     * заполняем уголок (треугольный) стенами, радиус равен tileMargin 
-     * правей и выше || левей и ниже
+     * заполняем уголок (треугольный) стенами, радиус равен tileMargin правей и
+     * ниже || левей и выше
+     *
      * @param x абсцисса центра угла
      * @param y ордината центра угла
      * @param invert 1 - заполняем сверху от центра, 0 - снизу
      */
-    private void cutCorner2(int x, int y, boolean invert)
-    {
-        int t= invert ? -1 : 1;
-        for (int i= 0; i<=tileMargin; i++)
-            for (int j= 0; i+j<=tileMargin; j++)
-                ans[x-t*i][y+t*j]= 1;
+    private void cutCorner(int x, int y, boolean invert) {
+        int t = invert ? -1 : 1;
+        for (int i = 0; i <= tileMargin; i++) {
+            for (int j = 0; i + j <= tileMargin; j++) {
+                ans[x + t * i][y + t * j] = wall;
+            }
+        }
     }
-    
+
+    /**
+     * заполняем уголок (треугольный) стенами, радиус равен tileMargin правей и
+     * выше || левей и ниже
+     *
+     * @param x абсцисса центра угла
+     * @param y ордината центра угла
+     * @param invert 1 - заполняем сверху от центра, 0 - снизу
+     */
+    private void cutCorner2(int x, int y, boolean invert) {
+        int t = invert ? -1 : 1;
+        for (int i = 0; i <= tileMargin; i++) {
+            for (int j = 0; i + j <= tileMargin; j++) {
+                ans[x - t * i][y + t * j] = 1;
+            }
+        }
+    }
+
     private void getLeftBottomCorner() {
         getLeftTopCorner();
         rotate270();
@@ -225,22 +226,23 @@ public class TileToMatrix {
     }
 
     private void getLeftHeadedT() {
-        for (int i= 0; i<tileSize; i++)
-        {
-            
-            for (int j= tileSize-tileMargin-1; j>=0; j-- )
-                ans[i][j]= empty;
-            
+        for (int i = 0; i < tileSize; i++) {
+
+            for (int j = tileSize - tileMargin - 1; j >= 0; j--) {
+                ans[i][j] = empty;
+            }
+
             // отрезаем правые столбцы
-            for (int j= tileSize-tileMargin; j<tileSize; j++)
-                ans[i][j]= wall;
+            for (int j = tileSize - tileMargin; j < tileSize; j++) {
+                ans[i][j] = wall;
+            }
         }
-            
+
         //отрезаем левый верхний угол
         cutCorner(0, 0, false);
-        
+
         //отрезаем левый нижний угол
-        cutCorner2(tileSize-1, 0, false);
+        cutCorner2(tileSize - 1, 0, false);
     }
 
     private void getRightHeadedT() {
@@ -259,22 +261,23 @@ public class TileToMatrix {
     }
 
     private void getCrossRoads() {
-        for (int i= 0; i<tileSize; i++)
-            for (int j= 0; j<tileSize; j++)
-                ans[i][j]= empty;
-        
+        for (int i = 0; i < tileSize; i++) {
+            for (int j = 0; j < tileSize; j++) {
+                ans[i][j] = empty;
+            }
+        }
+
         //отрезаем левый верхний угол
         cutCorner(0, 0, false);
-        
+
         //отрезаем левый нижний угол
-        cutCorner2(tileSize-1, 0, false);
+        cutCorner2(tileSize - 1, 0, false);
 
         //отрезаем правый верхний угол
-        cutCorner2(0, tileSize-1, true);
-        
+        cutCorner2(0, tileSize - 1, true);
+
         //отрезаем правый нижний угол
-        cutCorner(tileSize-1, tileSize-1, true);
+        cutCorner(tileSize - 1, tileSize - 1, true);
     }
-    
-    
+
 }
