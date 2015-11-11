@@ -1,4 +1,4 @@
-
+import static java.lang.StrictMath.*;
 /**
  *
  * @author WslF
@@ -120,5 +120,11 @@ public class Point extends Object {
      */
     public Point getSymmetric(Point middle) {
         return new Point(2 * middle.x - x, 2 * middle.y - y);
+    }
+    
+    public void rotateVector(double phi) {
+        double xNew= x*cos(phi) - y*sin(phi);
+        double yNew= x*sin(phi) + y*cos(phi);
+        x= xNew; y= yNew;
     }
 }
