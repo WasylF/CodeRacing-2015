@@ -127,14 +127,14 @@ public class TileToMatrix {
         for (int i = 0; i < tileSize; i++) {
             for (int j = i; j + i < tileSize; j++) {
                 int t1 = ans[i][j];
-                int t2 = ans[i][tileSize - j];
-                int t3 = ans[tileSize - i][tileSize - j];
-                int t4 = ans[tileSize - i][j];
+                int t2 = ans[i][tileSize - 1 - j];
+                int t3 = ans[tileSize - 1 -i][tileSize - 1 - j];
+                int t4 = ans[tileSize - 1 - i][j];
 
                 ans[i][j] = t4;
-                ans[i][tileSize - j] = t1;
-                ans[tileSize - i][tileSize - j] = t2;
-                ans[tileSize - i][j] = t3;
+                ans[i][tileSize - 1 - j] = t1;
+                ans[tileSize - 1 - i][tileSize - 1 - j] = t2;
+                ans[tileSize - 1 - i][j] = t3;
             }
         }
     }
