@@ -1,4 +1,6 @@
 
+import java.io.FileWriter;
+import java.io.IOException;
 import model.*;
 
 /**
@@ -117,22 +119,17 @@ public class TileToMatrix {
 
     private void rotate90() {
         /*
-         1234
-         5678
-         9012
-         3456
+         123    741
+         456    852
+         789    963
          */
-        for (int i = 0; i < tileSize; i++) {
-            for (int j = i; j + i < tileSize; j++) {
-                int t1 = ans[i][j];
-                int t2 = ans[i][tileSize - 1 - j];
-                int t3 = ans[tileSize - 1 - i][tileSize - 1 - j];
-                int t4 = ans[tileSize - 1 - i][j];
-
-                ans[i][j] = t4;
-                ans[i][tileSize - 1 - j] = t1;
-                ans[tileSize - 1 - i][tileSize - 1 - j] = t2;
-                ans[tileSize - 1 - i][j] = t3;
+        for (int i = 0; i < tileSize / 2; i++) {
+            for (int j = i; j + i < tileSize - 1; j++) {
+                int t = ans[i][j];
+                ans[i][j] = ans[tileSize - 1 - j][i];
+                ans[tileSize - 1 - j][i] = ans[tileSize - 1 - i][tileSize - 1 - j];
+                ans[tileSize - 1 - i][tileSize - 1 - j] = ans[j][tileSize - 1 - i];
+                ans[j][tileSize - 1 - i] = t;
             }
         }
     }
@@ -205,7 +202,7 @@ public class TileToMatrix {
         int t = invert ? -1 : 1;
         for (int i = 0; i <= tileMargin; i++) {
             for (int j = 0; i + j <= tileMargin; j++) {
-                ans[x - t * i][y + t * j] = 1;
+                ans[x - t * i][y + t * j] = wall;
             }
         }
     }
@@ -216,7 +213,7 @@ public class TileToMatrix {
     }
 
     private void getRightTopCorner() {
-        getLeftBottomCorner();
+        getLeftTopCorner();
         rotate90();
     }
 
@@ -278,6 +275,32 @@ public class TileToMatrix {
 
         //отрезаем правый нижний угол
         cutCorner(tileSize - 1, tileSize - 1, true);
+    }
+
+    private void printCurTileToFile(String fileName) {
+        try (FileWriter writer = new FileWriter(fileName, false)) {
+            for (int x = 0; x < tileSize; x++) {
+                String s = "";
+                for (int y = 0; y < tileSize; y++) {
+                    switch (ans[x][y]) {
+                        case StrategyWslF.selfCar:
+                            s += '.';
+                            break;
+                        case wall:
+                            s += '▓';
+                            break;
+                        case empty:
+                            s += ' ';
+                            break;
+                    }
+                }
+
+                writer.write(s + "\r\n");
+            }
+        } catch (IOException ex) {
+
+            System.out.println(ex.getMessage());
+        }
     }
 
 }
