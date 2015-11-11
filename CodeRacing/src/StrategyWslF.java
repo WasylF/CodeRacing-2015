@@ -67,7 +67,11 @@ public class StrategyWslF {
      * радиус закругления
      */
     int marginSize;
-    
+    /**
+     * матрица 800х800 которая отображает состаяние текущего тайла
+     */
+    int[][] curTile;
+            
     public void move(Car self, World world, Game game, Move move) {
     }
 
