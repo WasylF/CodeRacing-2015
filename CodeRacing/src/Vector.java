@@ -16,10 +16,10 @@ public class Vector extends Point {
         this.x = x;
         this.y = y;
     }
-    
+
     public Vector(Point p) {
-        this.x= p.x;
-        this.y= p.y;
+        this.x = p.x;
+        this.y = p.y;
     }
 
     @Override
