@@ -21,14 +21,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         calculateCurTile();
 
-   //     printCurTileToFile();
-
+        //     printCurTileToFile();
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
 
         double cornerTileOffset = 0.25D * game.getTrackTileSize();
-
-        switch (world.getTilesXY()[self.getNextWaypointX()][self.getNextWaypointY()]) {
+        switch (mapTiles[self.getNextWaypointX()][self.getNextWaypointY()]) {
             case LEFT_TOP_CORNER:
                 nextWaypointX += cornerTileOffset;
                 nextWaypointY += cornerTileOffset;
@@ -51,17 +49,26 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double angleToWaypoint = self.getAngleTo(nextWaypointX, nextWaypointY);
         double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
 
-        move.setWheelTurn(angleToWaypoint * 32.0D / PI);
+        double wheelTurn = angleToWaypoint;// * 32.0D / PI;
+        move.setWheelTurn(wheelTurn);
         int distanceToWall = getDistanceToWall();
-        if (distanceToWall >= self.getHeight() * 1.5) {
-            move.setEnginePower(1.0D);
-            if (distanceToWall >= tileSize / 2 && speedModule > 0) {
-                move.setUseNitro(true);
+        if (abs(wheelTurn) < 0.7) {
+            if (distanceToWall >= carHeight * 2.5) {
+                move.setEnginePower(1.0D);
+                if (distanceToWall >= carHeight * 3 && speedModule > 0) {
+                    move.setUseNitro(true);
+                }
+            } else if (distanceToWall > 2 * carHeight) {
+                move.setEnginePower(0.75D);
+            } else {
+                move.setEnginePower(0.1D);
             }
-        } else if (distanceToWall > self.getHeight()) {
-            move.setEnginePower(0.85D);
         } else {
-            move.setEnginePower(0.5D);
+            if (abs(wheelTurn) < 0.8) {
+                move.setEnginePower(0.1);
+            } else {
+                move.setEnginePower(-1);
+            }
         }
 
         if (world.getTick() != 0 && world.getTick() % 555 == 0) {
@@ -69,60 +76,62 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setSpillOil(true);
         }
 
-        if (abs(angleToWaypoint) > PI / 6 && distanceToWall < 2 * self.getHeight()) {
+        if (abs(angleToWaypoint) > PI / 10 && distanceToWall < 2 * carHeight) {
             move.setEnginePower(-1.0D);
         }
 
-        if (abs(angleToWaypoint) > PI / 4
+        if (abs(angleToWaypoint) > PI / 8
                 && speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
             move.setBrake(true);
         }
 
+        //int[][] wayPoints= world.getWaypoints();
+
     }
 
     int getDistanceToWall() {
-        /*       Point carSpeed = new Point(self.getSpeedX(), self.getSpeedY());
-         carSpeed.normalize();
-         if (hypot(self.getSpeedX(), self.getSpeedY()) < 1e-1) {
-         return tileSize;
-         }
-         while (max(abs(carSpeed.x), abs(carSpeed.y)) <= 1) {
-         carSpeed.x *= 1.5;
-         carSpeed.y *= 1.5;
-         }
-         //double angle = carSpeed.getAngleToOX();
-         final int numberOfTurns = 20;
-         double deltaAngle = PI / 6;
-         double turnAngle = 2 * deltaAngle / numberOfTurns;
+        Vector carSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
+        if (carSpeed.length() < 1e-1) {
+            return tileSize;
+        }
+        carSpeed.normalize();
+        while (max(abs(carSpeed.x), abs(carSpeed.y)) <= 1) {
+            carSpeed.x *= 1.02;
+            carSpeed.y *= 1.02;
+        }
+        //double angle = carSpeed.getAngleToOX();
+        final int numberOfTurns = 20;
+        double deltaAngle = PI / 6;
+        double turnAngle;// = 2 * deltaAngle / numberOfTurns;
 
-         for (int d = 1; d <= tileSize; d++) {
-         Point leftVector = new Point(carSpeed);
-         leftVector.rotateVector(-deltaAngle);
+        for (int d = 1; d <= tileSize; d++) {
+            Vector vector = new Vector(carSpeed);
+            vector.rotateVector(-deltaAngle);
 
-         turnAngle = 2 * deltaAngle / numberOfTurns;
-         //numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
-         for (int i = 0; i <= numberOfTurns; i++) {
-         int x = (int) (selfX + d * leftVector.x);
-         int y = (int) (selfY + d * leftVector.y);
-         if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
-         x = getAccurateCoordinate(x);
-         y = getAccurateCoordinate(y);
-         if (curTile[x][y] == selfCar || curTile[x][y] == empty) {
-         return tileSize;
-         } else {
-         return d;
-         }
-         }
+            turnAngle = 2 * deltaAngle / numberOfTurns;
+            //numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
+            for (int i = 0; i <= numberOfTurns; i++) {
+                int x = (int) (selfX + d * vector.x);
+                int y = (int) (selfY + d * vector.y);
+                if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
+                    x = getAccurateCoordinate(x);
+                    y = getAccurateCoordinate(y);
+                    if (getCurTile(x, y) == selfCar || getCurTile(x, y) == empty) {
+                        return tileSize;
+                    } else {
+                        return d;
+                    }
+                }
 
-         if (curTile[x][y] != selfCar && curTile[x][y] != empty) {
-         return d;
-         }
-         leftVector.rotateVector(turnAngle);
-         }
-         if (deltaAngle > PI / 30) {
-         deltaAngle -= turnAngle / 10;
-         }
-         }*/
+                if (getCurTile(x, y) != selfCar && getCurTile(x, y) != empty) {
+                    return d;
+                }
+                vector.rotateVector(turnAngle);
+            }
+            if (deltaAngle > PI / 30) {
+                deltaAngle -= turnAngle / 10;
+            }
+        }
         return tileSize;
     }
 
@@ -237,7 +246,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return false;
         }
         //curTile[tileSize - y - 1][x] = val;
-        curTile[y][x]= val;
+        curTile[y][x] = val;
         return true;
     }
 
