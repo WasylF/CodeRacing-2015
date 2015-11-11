@@ -68,12 +68,19 @@ public class StrategyWslF {
      */
     int marginSize;
     /**
-     * матрица 800х800 которая отображает состаяние текущего тайла
-     * [0][0] - левый верхний угол
-     * [tileSize-1][tileSize-1] - правый нижний угол
+     * матрица 800х800 которая отображает состаяние текущего тайла [0][0] -
+     * левый верхний угол [tileSize-1][tileSize-1] - правый нижний угол
      */
     int[][] curTile;
-            
+    /**
+     * ширина машины (140)
+     */
+    int carWidth;
+    /**
+     * высота машины (210)
+     */
+    int carHeight;
+
     public void move(Car self, World world, Game game, Move move) {
     }
 
@@ -100,11 +107,13 @@ public class StrategyWslF {
          }
          }*/
         mapTiles = world.getTilesXY();
-        tileSize= (int) (game.getTrackTileSize() + 0.1);
-        marginSize= (int) (game.getTrackTileMargin() + 0.1);
+        tileSize = (int) (game.getTrackTileSize() + 0.1);
+        marginSize = (int) (game.getTrackTileMargin() + 0.1);
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
         selfX = (int) (self.getX()) % tileSize;
         selfY = (int) (self.getY()) % tileSize;
+        carWidth = 140;//(int) (self.getWidth() + 0.1);
+        carHeight = 210;//(int) (self.getHeight() + 0.1);
     }
 }
