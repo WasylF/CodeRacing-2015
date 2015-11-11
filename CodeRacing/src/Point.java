@@ -27,6 +27,17 @@ public class Point extends Object {
         y= p.y;
     }
 
+    /**
+     * вычисление положительного угла между двумя векторами
+     * @param v второй вектор
+     * @return угол в радианах, если вычислить невозможно, то -1
+     */
+    public double getPositiveAngle(Point v) {
+        double t= hypot(x,y)*hypot(v.x,v.y);
+        if (t==0) return -1;
+        return t/(x*v.x+y*v.y);
+    }
+    
     @Override
     public String toString() {
         return " (" + x + "," + y + ") ";
