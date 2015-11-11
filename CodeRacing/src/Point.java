@@ -21,6 +21,11 @@ public class Point extends Object {
         x = x0;
         y = y0;
     }
+    
+    public Point(Point p) {
+        x= p.x;
+        y= p.y;
+    }
 
     @Override
     public String toString() {
