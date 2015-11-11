@@ -12,8 +12,17 @@ import model.World;
 public class StrategyWslF {
 
     //constants below
+    /**
+     * константа для отображения на матрице тайла собственной машины
+     */
     public static final int selfCar = -1;
+    /**
+     * константа для отображения на матрице тайла пустой точки
+     */
     public static final int empty = 0;
+    /**
+     * константа для отображения на матрице тайла ограждения/стен
+     */
     public static final int wall = -100;
 //end constants
 
@@ -30,12 +39,33 @@ public class StrategyWslF {
     World world;
     Game game;
     Move move;
+    /**
+     * карта тайлов
+     */
     TileType[][] mapTiles;
+    /**
+     * абсцисса текущего тайла на карте тайлов
+     */
     int curTileX;
+    /**
+     * ордината текущего тайла на карте тайлов
+     */
     int curTileY;
+    /**
+     * абсцисса центра машины относительно текущего тайла
+     */
     int selfX;
+    /**
+     * ордината центра машина относительно текущего тайла
+     */
     int selfY;
+    /**
+     * длинна/ширина тайла
+     */
     int tileSize;
+    /**
+     * радиус закругления
+     */
     int marginSize;
     
     public void move(Car self, World world, Game game, Move move) {
