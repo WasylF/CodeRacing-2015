@@ -10,16 +10,16 @@ public class Point extends Object {
 
     public double x;
     public double y;
-    private static final double EPS = 0.5;
+    protected static final double EPS = 1e-6;
 
     public Point() {
         x = 0;
         y = 0;
     }
 
-    public Point(double x0, double y0) {
-        x = x0;
-        y = y0;
+    public Point(double x, double y) {
+        this.x = x;
+        this.y = y;
     }
     
     public Point(Point p) {
@@ -27,73 +27,13 @@ public class Point extends Object {
         y= p.y;
     }
 
-    /**
-     * вычисление положительного угла между двумя векторами
-     * @param v второй вектор
-     * @return угол в радианах, если вычислить невозможно, то -1
-     */
-    public double getPositiveAngle(Point v) {
-        double t= hypot(x,y)*hypot(v.x,v.y);
-        if (t==0) return -1;
-        return t/(x*v.x+y*v.y);
-    }
-    
-    @Override
+     @Override
     public String toString() {
         return " (" + x + "," + y + ") ";
     }
 
     public boolean equals(Point p2) {
         return (Math.abs(p2.x - x) + Math.abs(p2.y - y) < EPS);
-    }
-
-    /**
-     * line: ax+by+c= 0
-     *
-     * @param a
-     * @param b
-     * @param c
-     * @return
-     */
-    public boolean isUnderLine(double a, double b, double c) {
-        double yLine = (-c - a) / b;
-        return y < yLine;
-    }
-
-    public double getAngleToOX() {
-        return (Math.atan2(x, -y) - Math.atan2(1, 0));
-    }
-
-    public void printVector() {
-        double v = Math.hypot(x, y);
-        if (y != 0) {
-            x /= y;
-            y /= y;
-        }
-        System.out.println(" (" + x + "," + y + ")  |xy|: " + v);
-    }
-
-    public double multiplyVectors(Point p2) {
-        return x * p2.y - y * p2.x;
-    }
-
-    public void normalize() {
-        double length = Math.hypot(x, y);
-        if (length > 1e-6) {
-            x /= length;
-            y /= length;
-        }
-    }
-
-    public int sgnMultiplyVectors(Point p2) {
-        double t = multiplyVectors(p2);
-        if (Math.abs(t) < 1e-6) {
-            return 0;
-        }
-        if (t > 0) {
-            return 1;
-        }
-        return -1;
     }
 
     /**
@@ -106,8 +46,8 @@ public class Point extends Object {
         int plus;
         plus = 0;
         for (int i = 0; i + 1 < polygon.length; i++) {
-            Point v = new Point(polygon[i + 1].x - polygon[i].x, polygon[i + 1].y - polygon[i].y);
-            Point vP = new Point(x - polygon[i].x, y - polygon[i].y);
+            Vector v = new Vector(polygon[i + 1].x - polygon[i].x, polygon[i + 1].y - polygon[i].y);
+            Vector vP = new Vector(x - polygon[i].x, y - polygon[i].y);
             switch (v.sgnMultiplyVectors(vP)) {
                 case 0:
                     return true;
@@ -116,8 +56,8 @@ public class Point extends Object {
             }
         }
 
-        Point v = new Point(polygon[0].x - polygon[polygon.length - 1].x, polygon[0].y - polygon[polygon.length - 1].y);
-        Point vP = new Point(x - polygon[polygon.length - 1].x, y - polygon[polygon.length - 1].y);
+        Vector v = new Vector(polygon[0].x - polygon[polygon.length - 1].x, polygon[0].y - polygon[polygon.length - 1].y);
+        Vector vP = new Vector(x - polygon[polygon.length - 1].x, y - polygon[polygon.length - 1].y);
         switch (v.sgnMultiplyVectors(vP)) {
             case 0:
                 return true;
@@ -138,9 +78,4 @@ public class Point extends Object {
         return new Point(2 * middle.x - x, 2 * middle.y - y);
     }
     
-    public void rotateVector(double phi) {
-        double xNew= x*cos(phi) - y*sin(phi);
-        double yNew= x*sin(phi) + y*cos(phi);
-        x= xNew; y= yNew;
-    }
 }
