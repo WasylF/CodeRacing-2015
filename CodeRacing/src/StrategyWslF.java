@@ -69,6 +69,8 @@ public class StrategyWslF {
     int marginSize;
     /**
      * матрица 800х800 которая отображает состаяние текущего тайла
+     * [0][0] - левый верхний угол
+     * [tileSize-1][tileSize-1] - правый нижний угол
      */
     int[][] curTile;
             

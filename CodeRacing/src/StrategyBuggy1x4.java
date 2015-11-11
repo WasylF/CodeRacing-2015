@@ -1,4 +1,6 @@
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.*;
 import static java.lang.StrictMath.*;
 import java.util.Queue;
@@ -17,7 +19,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
 
-        int[][] curTile = getCurTile();
+        calculateCurTile();
+
+   //     printCurTileToFile();
 
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
@@ -48,7 +52,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
 
         move.setWheelTurn(angleToWaypoint * 32.0D / PI);
-        int distanceToWall = getDistanceToWall(curTile);
+        int distanceToWall = getDistanceToWall();
         if (distanceToWall >= self.getHeight() * 1.5) {
             move.setEnginePower(1.0D);
             if (distanceToWall >= tileSize / 2 && speedModule > 0) {
@@ -76,39 +80,49 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
     }
 
-    int getDistanceToWall(int[][] curTile) {
-        Point carSpeed = new Point(self.getSpeedX(), self.getSpeedY());
-        carSpeed.normalize();
-        if (hypot(self.getSpeedX(), self.getSpeedY()) < 1e-1) {
-            return tileSize;
-        }
-        //double angle = carSpeed.getAngleToOX();
-        int numberOfTurns = 20;
-        double deltaAngle = PI / 6;
-        double turnAngle = 2 * deltaAngle / numberOfTurns;
+    int getDistanceToWall() {
+        /*       Point carSpeed = new Point(self.getSpeedX(), self.getSpeedY());
+         carSpeed.normalize();
+         if (hypot(self.getSpeedX(), self.getSpeedY()) < 1e-1) {
+         return tileSize;
+         }
+         while (max(abs(carSpeed.x), abs(carSpeed.y)) <= 1) {
+         carSpeed.x *= 1.5;
+         carSpeed.y *= 1.5;
+         }
+         //double angle = carSpeed.getAngleToOX();
+         final int numberOfTurns = 20;
+         double deltaAngle = PI / 6;
+         double turnAngle = 2 * deltaAngle / numberOfTurns;
 
-        for (int d = 1; d <= tileSize; d++) {
-            Point leftVector = new Point(carSpeed);
-            leftVector.rotateVector(-deltaAngle);
+         for (int d = 1; d <= tileSize; d++) {
+         Point leftVector = new Point(carSpeed);
+         leftVector.rotateVector(-deltaAngle);
 
-            numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
-            for (int i = 0; i <= numberOfTurns; i++) {
-                int x = (int) (selfX + i * leftVector.x);
-                int y = (int) (selfY + i * leftVector.y);
-                if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
-                    x = getAccurateCoordinate(x);
-                    y = getAccurateCoordinate(y);
-                    if (curTile[x][y] == selfCar || curTile[x][y] == empty) {
-                        return tileSize;
-                    } else {
-                        return d;
-                    }
-                }
+         turnAngle = 2 * deltaAngle / numberOfTurns;
+         //numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
+         for (int i = 0; i <= numberOfTurns; i++) {
+         int x = (int) (selfX + d * leftVector.x);
+         int y = (int) (selfY + d * leftVector.y);
+         if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
+         x = getAccurateCoordinate(x);
+         y = getAccurateCoordinate(y);
+         if (curTile[x][y] == selfCar || curTile[x][y] == empty) {
+         return tileSize;
+         } else {
+         return d;
+         }
+         }
 
-                leftVector.rotateVector(turnAngle);
-            }
-            deltaAngle -= turnAngle / 10;
-        }
+         if (curTile[x][y] != selfCar && curTile[x][y] != empty) {
+         return d;
+         }
+         leftVector.rotateVector(turnAngle);
+         }
+         if (deltaAngle > PI / 30) {
+         deltaAngle -= turnAngle / 10;
+         }
+         }*/
         return tileSize;
     }
 
@@ -124,10 +138,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return (int) t;
     }
 
-    int[][] getCurTile() {
-        int[][] curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
+    void calculateCurTile() {
+        curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
 
-        Point[] rectangleCar = getCarVertexCoordinates();
+//        printCurTileToFile(curTile);
+        Point[] rectangleCar = getCarVertexCoordinates(self);
         Point minP = new Point();
         Point maxP = new Point();
         getMinMaxCoordinates(rectangleCar, minP, maxP);
@@ -141,11 +156,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             for (int j = yMin; j <= yMax; j++) {
                 Point p = new Point(i, j);
                 if (p.checkPointInPolygon(rectangleCar)) {
-                    curTile[i][j] = selfCar;
+                    setCurTile(i, j, selfCar);
                 }
             }
         }
-        return curTile;
     }
 
     private void getMinMaxCoordinates(Point[] polygon, Point minP, Point maxP) {
@@ -174,24 +188,83 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         maxP.y = yMax;
     }
 
-    private Point[] getCarVertexCoordinates() {
-        Point carCenter = new Point(self.getX() - curTileX * game.getTrackTileSize(), self.getY() - curTileY * game.getTrackTileSize());
-        //int carX = (int) (carCenter.x + 0.1);
-        //int carY = (int) (carCenter.y + 0.1);
+    /**
+     * вычисляет относительные координаты 4 вершин машини
+     *
+     * @return массив из 4 точек - вершин машины
+     */
+    private Point[] getCarVertexCoordinates(Car car) {
+        int carWidth = 140;//(int) car.getWidth();
+        int carHeight = 210;//(int) car.getHeight();
 
-        double angle = -self.getAngle();
-        int carWidth = (int) self.getWidth();
-        int carHeight = (int) self.getHeight();
+        double x = getRelativeCoordinate(car.getX());
+        double y = getRelativeCoordinate(car.getY());
+        Point carCenter = new Point(x, y);
 
-        Point a = new Point(carCenter.x - carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
-                carCenter.y - carHeight * cos(angle) / 2 + carWidth * cos(angle) / 2);
-        Point b = new Point(carCenter.x + carHeight * cos(angle) / 2 - carWidth * sin(angle) / 2,
-                carCenter.y + carHeight * sin(angle) / 2 + carWidth * cos(angle) / 2);
+        double angle = car.getAngle();
+        Vector carVector = new Vector();
+        carVector.getVectorByAngle(angle);
 
+        Vector v = new Vector(carVector);
+        v.rotateVector(-PI / 2);
+
+        double k = carWidth / (2 * v.length());
+        Point M = new Point(carCenter.x + k * v.x, carCenter.y + k * v.y);
+        k = carHeight / (2 * carVector.length());
+
+        Point a = new Point(M.x + k * carVector.x, M.y + k * carVector.y);
+        Point b = a.getSymmetric(M);
         Point c = a.getSymmetric(carCenter);
         Point d = b.getSymmetric(carCenter);
 
         return new Point[]{a, b, c, d};
+    }
+
+    private double getRelativeCoordinate(double c) {
+        return c - ((int) (c / tileSize)) * tileSize;
+    }
+
+    private int getCurTile(int x, int y) {
+        if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
+            return wall;
+        }
+        //return curTile[tileSize - y - 1][x];
+        return curTile[y][x];
+    }
+
+    private boolean setCurTile(int x, int y, int val) {
+        if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
+            return false;
+        }
+        //curTile[tileSize - y - 1][x] = val;
+        curTile[y][x]= val;
+        return true;
+    }
+
+    private void printCurTileToFile() {
+        try (FileWriter writer = new FileWriter("curTile.txt", false)) {
+            for (int x = 0; x < tileSize; x++) {
+                String s = "";
+                for (int y = 0; y < tileSize; y++) {
+                    switch (curTile[x][y]) {
+                        case selfCar:
+                            s += '.';
+                            break;
+                        case wall:
+                            s += '▓';
+                            break;
+                        case empty:
+                            s += ' ';
+                            break;
+                    }
+                }
+
+                writer.write(s + "\r\n");
+            }
+        } catch (IOException ex) {
+
+            System.out.println(ex.getMessage());
+        }
     }
 
 }
