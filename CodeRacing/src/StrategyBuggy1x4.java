@@ -4,11 +4,7 @@ import java.io.IOException;
 import java.lang.*;
 import static java.lang.StrictMath.*;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 import model.Car;
-import model.Game;
-import model.Move;
-import model.World;
 
 /**
  *
@@ -16,16 +12,84 @@ import model.World;
  */
 public class StrategyBuggy1x4 extends StrategyWslF {
 
-    public void move(Car self, World world, Game game, Move move) {
-        initAll(self, world, game, move);
-
+    @Override
+    public void move() {
         calculateCurTile();
 
-        //     printCurTileToFile();
+        Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
+
+        Point nextWayPoint = getNextWayPoint();
+        double angleToWaypoint = self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
+        double wheelTurn = angleToWaypoint;// * 32.0D / PI;
+        move.setWheelTurn(wheelTurn);
+
+        calulateEnginePower(angleToWaypoint, wheelTurn, speed);
+        
+        activateIfNeedBreaks(angleToWaypoint, speed);
+        
+        activateIfNeedAmmo();
+        //int[][] wayPoints= world.getWaypoints();
+    }
+
+    /**
+     * вычисляет значение мощности двигателя и устанавливает в move
+     */
+    private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
+        int distanceToWall = getDistanceToWall();
+        if (abs(wheelTurn) < 0.7) {
+            if (distanceToWall >= carHeight * 2.5) {
+                move.setEnginePower(1.0D);
+                if (distanceToWall >= carHeight * 3 && speed.length() > 0) {
+                    move.setUseNitro(true);
+                }
+            } else if (distanceToWall > 2 * carHeight) {
+                move.setEnginePower(0.75D);
+            } else {
+                move.setEnginePower(0.1D);
+            }
+        } else {
+            if (abs(wheelTurn) < 0.8) {
+                move.setEnginePower(0.1);
+            } else {
+                move.setEnginePower(-1);
+            }
+        }
+
+        if (abs(angleToWaypoint) > PI / 10 && distanceToWall < 2 * carHeight) {
+            move.setEnginePower(-1.0D);
+        }
+
+    }
+
+    /**
+     * включает, если нужно тормоза
+     * @param angleToWaypoint
+     * @param speed 
+     */
+    private void activateIfNeedBreaks(double angleToWaypoint, Vector speed) {
+        if (abs(angleToWaypoint) > PI / 8
+                && speed.length() * speed.length() * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
+            move.setBrake(true);
+        }
+
+    }
+
+    private void activateIfNeedAmmo() {
+         if (world.getTick() != 0 && world.getTick() % 555 == 0) {
+            move.setThrowProjectile(true);
+            move.setSpillOil(true);
+        }       
+    }
+    
+    /**
+     *
+     * @return точка в направлении которой машина будет двигаться
+     */
+    private Point getNextWayPoint() {
         double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
         double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
 
-        double cornerTileOffset = 0.25D * game.getTrackTileSize();
+        double cornerTileOffset = 0.25D * tileSize;
         switch (mapTiles[self.getNextWaypointX()][self.getNextWaypointY()]) {
             case LEFT_TOP_CORNER:
                 nextWaypointX += cornerTileOffset;
@@ -46,47 +110,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             default:
         }
 
-        double angleToWaypoint = self.getAngleTo(nextWaypointX, nextWaypointY);
-        double speedModule = hypot(self.getSpeedX(), self.getSpeedY());
-
-        double wheelTurn = angleToWaypoint;// * 32.0D / PI;
-        move.setWheelTurn(wheelTurn);
-        int distanceToWall = getDistanceToWall();
-        if (abs(wheelTurn) < 0.7) {
-            if (distanceToWall >= carHeight * 2.5) {
-                move.setEnginePower(1.0D);
-                if (distanceToWall >= carHeight * 3 && speedModule > 0) {
-                    move.setUseNitro(true);
-                }
-            } else if (distanceToWall > 2 * carHeight) {
-                move.setEnginePower(0.75D);
-            } else {
-                move.setEnginePower(0.1D);
-            }
-        } else {
-            if (abs(wheelTurn) < 0.8) {
-                move.setEnginePower(0.1);
-            } else {
-                move.setEnginePower(-1);
-            }
-        }
-
-        if (world.getTick() != 0 && world.getTick() % 555 == 0) {
-            move.setThrowProjectile(true);
-            move.setSpillOil(true);
-        }
-
-        if (abs(angleToWaypoint) > PI / 10 && distanceToWall < 2 * carHeight) {
-            move.setEnginePower(-1.0D);
-        }
-
-        if (abs(angleToWaypoint) > PI / 8
-                && speedModule * speedModule * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
-            move.setBrake(true);
-        }
-
-        //int[][] wayPoints= world.getWaypoints();
-
+        return new Point(nextWaypointX, nextWaypointY);
     }
 
     int getDistanceToWall() {

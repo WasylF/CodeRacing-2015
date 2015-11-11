@@ -9,7 +9,7 @@ import model.World;
  *
  * @author Wsl_F
  */
-public class StrategyWslF {
+public abstract class StrategyWslF {
 
     //constants below
     /**
@@ -82,7 +82,11 @@ public class StrategyWslF {
     int carHeight;
 
     public void move(Car self, World world, Game game, Move move) {
+        initAll(self, world, game, move);
+        move();
     }
+    
+    public abstract void move();
 
     protected void initAll(Car self, World world, Game game, Move move) {
         this.self = self;
