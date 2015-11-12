@@ -35,11 +35,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * вычисляет значение мощности двигателя и устанавливает в move
      */
     private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
-        int distanceToWall = getDistanceToWall();
+        int distanceToWall = getDistanceToWall(PI/6);
         if (abs(wheelTurn) < 0.7) {
             if (distanceToWall >= carHeight * 2.5) {
                 move.setEnginePower(1.0D);
-                if (distanceToWall >= carHeight * 3 && speed.length() > 0) {
+                if (distanceToWall >= carHeight * 3 && speed.length() > 0 && abs(wheelTurn)<0.3) {
                     move.setUseNitro(true);
                 }
             } else if (distanceToWall > 2 * carHeight) {
@@ -59,6 +59,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setEnginePower(-1.0D);
         }
 
+        int dist2= getDistanceToWall(PI/60);
+        if (dist2> carHeight*3 && wheelTurn<1) {
+            move.setEnginePower(0.9);
+        }
     }
 
     /**
@@ -112,9 +116,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         return new Point(nextWaypointX, nextWaypointY);
     }
-
-    int getDistanceToWall() {
-        Vector carSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
+    
+    int getDistanceToWall(Car car, double deltaAngle) {
+        int carColor= getColorOfCar(car);
+        int carX= (int) getRelativeCoordinate(car.getX());
+        int carY= (int) getRelativeCoordinate(car.getY());
+        Vector carSpeed = new Vector(car.getSpeedX(), car.getSpeedY());
         if (carSpeed.length() < 1e-1) {
             return tileSize;
         }
@@ -124,8 +131,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             carSpeed.y *= 1.02;
         }
         //double angle = carSpeed.getAngleToOX();
-        final int numberOfTurns = 20;
-        double deltaAngle = PI / 6;
+        final int numberOfTurns = 40;
+       // double deltaAngle = PI / 6;
         double turnAngle;// = 2 * deltaAngle / numberOfTurns;
 
         for (int d = 1; d <= tileSize; d++) {
@@ -135,28 +142,32 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             turnAngle = 2 * deltaAngle / numberOfTurns;
             //numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
             for (int i = 0; i <= numberOfTurns; i++) {
-                int x = (int) (selfX + d * vector.x);
-                int y = (int) (selfY + d * vector.y);
+                int x = (int) (carX + d * vector.x);
+                int y = (int) (carY + d * vector.y);
                 if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
                     x = getAccurateCoordinate(x);
                     y = getAccurateCoordinate(y);
-                    if (getCurTile(x, y) == selfCar || getCurTile(x, y) == empty) {
+                    if (getCurTile(x, y) == carColor || getCurTile(x, y) == empty) {
                         return tileSize;
                     } else {
                         return d;
                     }
                 }
 
-                if (getCurTile(x, y) != selfCar && getCurTile(x, y) != empty) {
+                if (getCurTile(x, y) != carColor && getCurTile(x, y) != empty) {
                     return d;
                 }
                 vector.rotateVector(turnAngle);
             }
             if (deltaAngle > PI / 30) {
-                deltaAngle -= turnAngle / 10;
+                deltaAngle -= turnAngle / 50;
             }
         }
-        return tileSize;
+        return tileSize;        
+    }
+    
+    int getDistanceToWall(double deltaAngle) {
+        return getDistanceToWall(self, deltaAngle);
     }
 
     /**

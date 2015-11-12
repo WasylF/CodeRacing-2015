@@ -17,6 +17,14 @@ public abstract class StrategyWslF {
      */
     public static final int selfCar = -1;
     /**
+     * константа для отображения на матрице тайла машины сокомандника
+     */
+    public static final int teammateCar = -2;
+    /**
+     * константа для отображения на матрице тайла машины соперников
+     */
+    public static final int opponentCar = -10;
+    /**
      * константа для отображения на матрице тайла пустой точки
      */
     public static final int empty = 0;
@@ -85,7 +93,7 @@ public abstract class StrategyWslF {
         initAll(self, world, game, move);
         move();
     }
-    
+
     public abstract void move();
 
     protected void initAll(Car self, World world, Game game, Move move) {
@@ -119,5 +127,17 @@ public abstract class StrategyWslF {
         selfY = (int) (self.getY()) % tileSize;
         carWidth = 140;//(int) (self.getWidth() + 0.1);
         carHeight = 210;//(int) (self.getHeight() + 0.1);
+    }
+
+    protected int getColorOfCar(Car car) {
+        if (car.getPlayerId() == world.getMyPlayer().getId()) {
+            if (car.equals(self)) {
+                return selfCar;
+            } else {
+                return teammateCar;
+            }
+        } else {
+            return opponentCar;
+        }
     }
 }
