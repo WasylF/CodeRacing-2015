@@ -51,52 +51,53 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * вычисляет значение мощности двигателя и устанавливает в move
      */
     private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
-        int distanceToWall = getDistanceToWall(PI / 6);
-        int dist2 = getDistanceToWall(PI / 60);
+        move.setEnginePower(0.8);
+        /*        int distanceToWall = getDistanceToWall(PI / 6);
+         int dist2 = getDistanceToWall(PI / 60);
 
-        useBreaks = false;
-        Vector car = new Vector(self.getAngle());
+         useBreaks = false;
+         Vector car = new Vector(self.getAngle());
 
-        if (car.getPositiveAngle(speed) > PI / 3) {
-            move.setEnginePower(1.0);
-            return;
-        }
+         if (car.getPositiveAngle(speed) > PI / 3) {
+         move.setEnginePower(1.0);
+         return;
+         }
 
-        if (abs(angleToWaypoint) > PI / 4) {
-            move.setEnginePower(0);
-            return;
-        }
+         if (abs(angleToWaypoint) > PI / 4) {
+         move.setEnginePower(0);
+         return;
+         }
 
-        if (distanceToWall > carHeight * 0.5
-                && dist2 > carHeight * 2.5 && abs(angleToWaypoint) < PI / 6) {
-            if (wheelTurn < 0.2) {
-                move.setEnginePower(1.0);
-            } else if (wheelTurn < 0.3) {
-                move.setEnginePower(0.8);
-            } else if (wheelTurn < 0.4) {
-                move.setEnginePower(0.6);
-            } else if (wheelTurn < 0.5) {
-                move.setEnginePower(0.1);
-            } else {
-                useBreaks = true;
-                move.setEnginePower(-0.1);
-                if (wheelTurn > 0.8) {
-                    move.setEnginePower(-1);
-                }
-            }
+         if (distanceToWall > carHeight * 0.5
+         && dist2 > carHeight * 2.5 && abs(angleToWaypoint) < PI / 6) {
+         if (wheelTurn < 0.2) {
+         move.setEnginePower(1.0);
+         } else if (wheelTurn < 0.3) {
+         move.setEnginePower(0.8);
+         } else if (wheelTurn < 0.4) {
+         move.setEnginePower(0.6);
+         } else if (wheelTurn < 0.5) {
+         move.setEnginePower(0.1);
+         } else {
+         useBreaks = true;
+         move.setEnginePower(-0.1);
+         if (wheelTurn > 0.8) {
+         move.setEnginePower(-1);
+         }
+         }
 
-            return;
-        }
+         return;
+         }
 
-        if (distanceToWall > carHeight
-                && dist2 > carHeight
-                * 1.5 && abs(angleToWaypoint)
-                < PI / 9) {
-            move.setEnginePower(0.85);
-            return;
-        }
+         if (distanceToWall > carHeight
+         && dist2 > carHeight
+         * 1.5 && abs(angleToWaypoint)
+         < PI / 9) {
+         move.setEnginePower(0.85);
+         return;
+         }
 
-        move.setEnginePower(0.1);
+         move.setEnginePower(0.1);*/
     }
 
     /**
@@ -123,6 +124,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setSpillOil(true);
         }
         if (world.getTick() > 180 && abs(move.getEnginePower() - 1) < 0.05) {
+            move.setUseNitro(true);
+        }
+        if (world.getTick() == 182) {
             move.setUseNitro(true);
         }
     }
