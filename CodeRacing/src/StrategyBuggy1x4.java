@@ -188,6 +188,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
     /**
      * находим расстояние от центра машины до ближайшей стены
+     *
      * @param car машина
      * @param deltaAngle угол отклонения от вектора скорости
      * @return расстояние до стены
@@ -205,17 +206,14 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             carSpeed.x *= 1.02;
             carSpeed.y *= 1.02;
         }
-        //double angle = carSpeed.getAngleToOX();
         final int numberOfTurns = 40;
-        // double deltaAngle = PI / 6;
-        double turnAngle;// = 2 * deltaAngle / numberOfTurns;
+        double turnAngle;
 
         for (int d = 1; d <= tileSize; d++) {
             Vector vector = new Vector(carSpeed);
             vector.rotateVector(-deltaAngle);
 
             turnAngle = 2 * deltaAngle / numberOfTurns;
-            //numberOfTurns = (int) (deltaAngle * 2 / turnAngle);
             for (int i = 0; i <= numberOfTurns; i++) {
                 int x = (int) (carX + d * vector.x);
                 int y = (int) (carY + d * vector.y);
@@ -241,8 +239,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return tileSize;
     }
 
-    /** 
+    /**
      * находим расстояние от центра собственной машины до ближайшей стены
+     *
      * @param deltaAngle угол отклонения от вектора скорости
      * @return расстояние до стены
      */
@@ -263,13 +262,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
-     * получает схематическое изображение текущего тайла с учетом собстевенной 
+     * получает схематическое изображение текущего тайла с учетом собстевенной
      * машины, планируется добавить машины соперников
      */
     void calculateCurTile() {
         curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
 
-//        printCurTileToFile(curTile);
         Point[] rectangleCar = getCarVertexCoordinates(self);
         Point minP = new Point();
         Point maxP = new Point();
@@ -291,8 +289,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
-     * возвращеет через minP, maxP минимальные и максимальные значения абсцисс 
-     * и ординат из мн-ва точек polygon 
+     * возвращеет через minP, maxP минимальные и максимальные значения абсцисс и
+     * ординат из мн-ва точек polygon
+     *
      * @param polygon множество точек
      * @param minP параметр для возвращения минимальной абсциссы и ординаты
      * @param maxP параметр для возвращения максимальной абсциссы и ординаты
@@ -353,8 +352,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     private double getRelativeCoordinate(double c) {
         return c - ((int) (c / tileSize)) * tileSize;
     }
+
     /**
      * возвращает значение в матрице таййла, с относительными координатами (х;у)
+     *
      * @param x абсцисса
      * @param y ордината
      * @return значение в текущем тайле (стена/пусто/своя машина/...)
@@ -363,12 +364,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return wall;
         }
-        //return curTile[tileSize - y - 1][x];
         return curTile[y][x];
     }
 
     /**
      * задает значение val в матрице таййла, с относительными координатами (х;у)
+     *
      * @param x абсцисса
      * @param y ордината
      * @param val значение
@@ -377,7 +378,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return false;
         }
-        //curTile[tileSize - y - 1][x] = val;
         curTile[y][x] = val;
         return true;
     }
