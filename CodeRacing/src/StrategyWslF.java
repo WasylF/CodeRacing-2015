@@ -88,6 +88,11 @@ public abstract class StrategyWslF {
      * высота машины (210)
      */
     int carHeight;
+    
+    /**
+     * время начала заезда
+     */
+    static final int startTick=180;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
