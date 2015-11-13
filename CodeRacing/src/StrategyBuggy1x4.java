@@ -12,6 +12,8 @@ import model.Car;
  */
 public class StrategyBuggy1x4 extends StrategyWslF {
 
+    private boolean useBreaks;
+
     @Override
     public void move() {
         calculateCurTile();
@@ -31,8 +33,14 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         //int[][] wayPoints= world.getWaypoints();
     }
 
+    /**
+     * вычисляет и устанавливает относительтное значение поворота колес
+     *
+     * @param angleToWaypoint
+     * @return относительный поворот колес
+     */
     private double getWheelTurn(double angleToWaypoint) {
-        double wheelTurn = angleToWaypoint * 1.5D / PI;
+        double wheelTurn = angleToWaypoint * 12 / PI;
         move.setWheelTurn(wheelTurn);
         return wheelTurn;
     }
@@ -42,31 +50,52 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
         int distanceToWall = getDistanceToWall(PI / 6);
-        if (abs(wheelTurn) < 0.7) {
-            if (distanceToWall >= carHeight * 2.5) {
-                move.setEnginePower(1.0D);
-                if (distanceToWall >= carHeight * 3 && speed.length() > 0 && abs(wheelTurn) < 0.3) {
-                    move.setUseNitro(true);
-                }
-            } else if (distanceToWall > 2 * carHeight) {
-                move.setEnginePower(0.75D);
-            } else {
-                move.setEnginePower(0.1D);
-            }
-        } else if (abs(wheelTurn) < 0.8) {
-            move.setEnginePower(0.1);
-        } else {
-            move.setEnginePower(-1);
-        }
-
-        if (abs(angleToWaypoint) > PI / 10 && distanceToWall < 2 * carHeight) {
-            move.setEnginePower(-1.0D);
-        }
-
         int dist2 = getDistanceToWall(PI / 60);
-        if (dist2 > carHeight * 3 && wheelTurn < 1) {
-            move.setEnginePower(0.9);
+
+        useBreaks = false;
+        Vector car = new Vector(self.getAngle());
+
+        if (car.getPositiveAngle(speed) > PI / 3) {
+            move.setEnginePower(1.0);
+            return;
         }
+
+        if (abs(angleToWaypoint) > PI / 4) {
+            move.setEnginePower(0);
+            return;
+        }
+
+        if (distanceToWall > carHeight * 0.5
+                && dist2 > carHeight * 2.5 && abs(angleToWaypoint) < PI / 6) {
+            if (wheelTurn < 0.2) {
+                move.setEnginePower(1.0);
+            } else if (wheelTurn < 0.3) {
+                move.setEnginePower(0.8);
+            } else if (wheelTurn < 0.4) {
+                move.setEnginePower(0.6);
+            } else if (wheelTurn < 0.5) {
+                move.setEnginePower(0.1);
+            } else {
+                useBreaks = true;
+                move.setEnginePower(-0.1);
+                if (wheelTurn > 0.8) {
+                    move.setEnginePower(-1);
+                }
+            }
+
+            return;
+        }
+
+        if (distanceToWall > carHeight
+                && dist2 > carHeight
+                * 1.5 && abs(angleToWaypoint)
+                < PI / 9) {
+            move.setEnginePower(0.85);
+            return;
+        }
+
+        move.setEnginePower(
+                0.1);
     }
 
     /**
@@ -76,6 +105,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @param speed
      */
     private void activateIfNeedBreaks(double angleToWaypoint, Vector speed) {
+        if (useBreaks) {
+            move.setBrake(true);
+            return;
+        }
         if (abs(angleToWaypoint) > PI / 8
                 && speed.length() * speed.length() * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
             move.setBrake(true);
@@ -88,6 +121,26 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setThrowProjectile(true);
             move.setSpillOil(true);
         }
+        if (world.getTick() > 180 && abs(move.getEnginePower() - 1) < 0.05) {
+            move.setUseNitro(true);
+        }
+    }
+
+    /**
+     * отодвигает координату от стены, если расстояние до стены 2/3 ширины
+     * корпуса
+     *
+     * @param t координата
+     * @return пересчитаная (если нужно) координата
+     */
+    private double getNotToCloseToWall(double t) {
+        if (t < marginSize + 2 * carWidth / 3) {
+            t = marginSize + 2 * carWidth / 3;
+        }
+        if (t > marginSize + tileSize - 2 * carWidth / 3) {
+            t = tileSize - (marginSize + 2 * carWidth / 3);
+        }
+        return t;
     }
 
     /**
@@ -95,10 +148,14 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return точка в направлении которой машина будет двигаться
      */
     private Point getNextWayPoint() {
-        double nextWaypointX = (self.getNextWaypointX() + 0.5D) * game.getTrackTileSize();
-        double nextWaypointY = (self.getNextWaypointY() + 0.5D) * game.getTrackTileSize();
+        final double koef = 0.35;
+        double nextWaypointX = (self.getNextWaypointX() + 0.5D) * tileSize;
+        double nextWaypointY = (self.getNextWaypointY() + 0.5D) * tileSize;
 
-        double cornerTileOffset = 0.25D * tileSize;
+        double curX = getNotToCloseToWall(selfX);
+        double curY = getNotToCloseToWall(selfY);
+
+        double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
         switch (mapTiles[self.getNextWaypointX()][self.getNextWaypointY()]) {
             case LEFT_TOP_CORNER:
                 nextWaypointX += cornerTileOffset;
@@ -115,6 +172,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             case RIGHT_BOTTOM_CORNER:
                 nextWaypointX -= cornerTileOffset;
                 nextWaypointY -= cornerTileOffset;
+                break;
+            case VERTICAL:
+                nextWaypointX = nextWaypointX - 0.5 * tileSize + curX + koef * (tileSize / 2 - selfX);
+                break;
+            case HORIZONTAL:
+                nextWaypointY = nextWaypointY - 0.5 * tileSize + curY + koef * (tileSize / 2 - selfY);
                 break;
             default:
         }
