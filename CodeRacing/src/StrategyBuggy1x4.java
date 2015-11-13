@@ -13,9 +13,38 @@ import model.Car;
 public class StrategyBuggy1x4 extends StrategyWslF {
 
     private boolean useBreaks;
+    private Vector previousSpeed;
+    private Vector curSpeed;
+    private int goBack;
 
-    @Override
-    public void move() {
+    /**
+     * метод для инициализациии, вызываемый до начала хода
+     */
+    private void initialization() {
+        useBreaks = false;
+        if (previousSpeed == null) {
+            previousSpeed = new Vector();
+        }
+        curSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
+        if (goBack < 0) {
+            goBack = 0;
+        }
+    }
+
+    /**
+     * метод вызываемый после совершения хода
+     */
+    private void finalizeMove() {
+        previousSpeed = curSpeed;
+        if (goBack > 0) {
+            goBack--;
+        }
+    }
+
+    /**
+     * метод совершения хода
+     */
+    private void makeMove() {
         calculateCurTile();
 
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
@@ -32,7 +61,17 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         activateIfNeedBreaks(angleToWaypoint, speed);
 
         activateIfNeedAmmo();
-        //int[][] wayPoints= world.getWaypoints();
+        //int[][] wayPoints= world.getWaypoints();        
+    }
+
+    /**
+     * метод вызываемый из вне, для совершения хода
+     */
+    @Override
+    public void move() {
+        initialization();
+        makeMove();
+        finalizeMove();
     }
 
     /**
