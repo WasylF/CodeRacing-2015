@@ -64,7 +64,11 @@ public class Vector extends Point {
         if (t == 0) {
             return -1;
         }
-        return abs((x * v.x + y * v.y) / t);
+        return abs(acos((x * v.x + y * v.y) / t));
+    }
+    
+    public double getAngle(Vector v) {
+        
     }
     
     public double getAngleToOX() {
