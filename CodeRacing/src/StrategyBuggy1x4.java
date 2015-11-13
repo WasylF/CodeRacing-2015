@@ -21,7 +21,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
 
         Point nextWayPoint = getNextWayPoint();
-        double angleToWaypoint = self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
+        Vector toNextWasyPoint = new Vector(nextWayPoint.x - self.getX(), nextWayPoint.y - self.getY());
+        double angleToWaypoint = speed.getAngle(toNextWasyPoint);
+        //self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
 
         double wheelTurn = getWheelTurn(angleToWaypoint);
 
@@ -94,8 +96,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return;
         }
 
-        move.setEnginePower(
-                0.1);
+        move.setEnginePower(0.1);
     }
 
     /**
@@ -185,6 +186,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return new Point(nextWaypointX, nextWaypointY);
     }
 
+    /**
+     * находим расстояние от центра машины до ближайшей стены
+     * @param car машина
+     * @param deltaAngle угол отклонения от вектора скорости
+     * @return расстояние до стены
+     */
     int getDistanceToWall(Car car, double deltaAngle) {
         int carColor = getColorOfCar(car);
         int carX = (int) getRelativeCoordinate(car.getX());
@@ -222,7 +229,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                     }
                 }
 
-                if (getCurTile(x, y) != carColor && getCurTile(x, y) != empty) {
+                if (getCurTile(x, y) != wall) {
                     return d;
                 }
                 vector.rotateVector(turnAngle);
@@ -234,6 +241,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return tileSize;
     }
 
+    /** 
+     * находим расстояние от центра собственной машины до ближайшей стены
+     * @param deltaAngle угол отклонения от вектора скорости
+     * @return расстояние до стены
+     */
     int getDistanceToWall(double deltaAngle) {
         return getDistanceToWall(self, deltaAngle);
     }
@@ -250,6 +262,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return (int) t;
     }
 
+    /**
+     * получает схематическое изображение текущего тайла с учетом собстевенной 
+     * машины, планируется добавить машины соперников
+     */
     void calculateCurTile() {
         curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
 
@@ -274,6 +290,13 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
     }
 
+    /**
+     * возвращеет через minP, maxP минимальные и максимальные значения абсцисс 
+     * и ординат из мн-ва точек polygon 
+     * @param polygon множество точек
+     * @param minP параметр для возвращения минимальной абсциссы и ординаты
+     * @param maxP параметр для возвращения максимальной абсциссы и ординаты
+     */
     private void getMinMaxCoordinates(Point[] polygon, Point minP, Point maxP) {
         double xMin, xMax, yMin, yMax;
         xMin = polygon[0].x;
@@ -306,16 +329,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return массив из 4 точек - вершин машины
      */
     private Point[] getCarVertexCoordinates(Car car) {
-        int carWidth = 140;//(int) car.getWidth();
-        int carHeight = 210;//(int) car.getHeight();
-
         double x = getRelativeCoordinate(car.getX());
         double y = getRelativeCoordinate(car.getY());
         Point carCenter = new Point(x, y);
 
-        double angle = car.getAngle();
-        Vector carVector = new Vector();
-        carVector.getVectorByAngle(angle);
+        Vector carVector = new Vector(car.getAngle());
 
         Vector v = new Vector(carVector);
         v.rotateVector(-PI / 2);
@@ -335,7 +353,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     private double getRelativeCoordinate(double c) {
         return c - ((int) (c / tileSize)) * tileSize;
     }
-
+    /**
+     * возвращает значение в матрице таййла, с относительными координатами (х;у)
+     * @param x абсцисса
+     * @param y ордината
+     * @return значение в текущем тайле (стена/пусто/своя машина/...)
+     */
     private int getCurTile(int x, int y) {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return wall;
@@ -344,6 +367,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return curTile[y][x];
     }
 
+    /**
+     * задает значение val в матрице таййла, с относительными координатами (х;у)
+     * @param x абсцисса
+     * @param y ордината
+     * @param val значение
+     */
     private boolean setCurTile(int x, int y, int val) {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return false;
@@ -353,6 +382,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return true;
     }
 
+    /**
+     * печатает в файл curTile.txt схематическое изображение текущего тайла
+     */
     private void printCurTileToFile() {
         try (FileWriter writer = new FileWriter("curTile.txt", false)) {
             for (int x = 0; x < tileSize; x++) {
