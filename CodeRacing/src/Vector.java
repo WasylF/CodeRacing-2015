@@ -64,11 +64,16 @@ public class Vector extends Point {
         if (t == 0) {
             return -1;
         }
-        return abs(acos((x * v.x + y * v.y) / t));
+        return abs(getAngle(v));
     }
     
+    /**
+     * ориентированный угол между векторами
+     * @param v
+     * @return 
+     */
     public double getAngle(Vector v) {
-        
+        return atan2(x*v.y - v.x*y, x*v.x + y*v.y);
     }
     
     public double getAngleToOX() {
