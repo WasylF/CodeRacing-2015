@@ -58,7 +58,7 @@ public abstract class StrategyWslF {
     /**
      * размер тайла в общей карте трека
      */
-    public static final int worldTileSize = 200;
+    public static final int worldTileSize = 80;
 //end constants
 
     /**
@@ -230,6 +230,39 @@ public abstract class StrategyWslF {
 
             System.out.println(ex.getMessage());
         }
+    }
+
+    /**
+     * задает значение val в матрице карты, с относительными координатами (х;у)
+     *
+     * @param x абсцисса
+     * @param y ордината
+     * @param val значение
+     */
+    public boolean setCurWorldMap(int x, int y, int val) {
+        if (x < 0 || y < 0
+                || x >= worldTileSize * worldHeight
+                || y >= worldTileSize * worldWidth) {
+            return false;
+        }
+        worldMap[y][x] = val;
+        return true;
+    }
+
+    /**
+     * возвращает значение в матрице карты, с относительными координатами (х;у)
+     *
+     * @param x абсцисса
+     * @param y ордината
+     * @return значение в текущем тайле (стена/пусто/своя машина/...)
+     */
+    protected int getCurWorldMap(int x, int y) {
+        if (x < 0 || y < 0
+                || x >= worldTileSize * worldHeight
+                || y >= worldTileSize * worldWidth) {
+            return wall;
+        }
+        return worldMap[y][x];
     }
 
 }
