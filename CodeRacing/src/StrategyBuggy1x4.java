@@ -5,6 +5,7 @@ import java.lang.*;
 import static java.lang.StrictMath.*;
 import java.util.Queue;
 import model.Car;
+import model.Move;
 
 /**
  *
@@ -12,10 +13,40 @@ import model.Car;
  */
 public class StrategyBuggy1x4 extends StrategyWslF {
 
+    /**
+     * показывает нужно ли использовать тормоза на текущем ходу. инициализурется
+     * 0, в течении хода можем установить 1
+     */
     private boolean useBreaks;
+    /**
+     * скорость на предыдущем ходу
+     */
     private Vector previousSpeed;
+    /**
+     * скорость на текущем ходу
+     */
     private Vector curSpeed;
+    /**
+     * оставшееся количество тиков, в котороых машина будет ехать задним ходом.
+     */
     private int goBack;
+    /**
+     * относительный угол поворота при заднем ходе
+     */
+    private double goBackWheelTurn;
+    /**
+     * копия предыдущего хода
+     */
+    private Move previousMove;
+
+    /**
+     * количество тиков в течении которых автомобиль должен сдавать задним ходом
+     */
+    private static final int numberOfTickToGoBack = 120;
+    /**
+     * точка, в направлении которой должен двигаться автомобиль
+     */
+    private Point nextWayPoint;
 
     /**
      * метод для инициализациии, вызываемый до начала хода
@@ -29,6 +60,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (goBack < 0) {
             goBack = 0;
         }
+
+        calculateCurTile();
+        nextWayPoint = getNextWayPoint();
     }
 
     /**
@@ -39,17 +73,20 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (goBack > 0) {
             goBack--;
         }
+        previousMove = move;
     }
 
     /**
      * метод совершения хода
      */
     private void makeMove() {
-        calculateCurTile();
+        if (shouldGoBack()) {
+            goingBack();
+            return;
+        }
 
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
 
-        Point nextWayPoint = getNextWayPoint();
         Vector toNextWasyPoint = new Vector(nextWayPoint.x - self.getX(), nextWayPoint.y - self.getY());
         double angleToWaypoint = speed.getAngle(toNextWasyPoint);
         //self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
@@ -65,13 +102,123 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
+     * проверяем, нужно ли сдавать задний ход
+     *
+     * @return тру, если нужно
+     */
+    private boolean shouldGoBack() {
+        Vector opCarDirect = new Vector(self.getAngle() + PI);
+        //если уперлись задом в стенку, то нужно ехать вперед
+        if (getDistanceToWall(self, PI / 30, opCarDirect) < 2 * carHeight / 3) {
+            goBack = 0;
+            return false;
+        }
+
+        if (goBack > 0) {
+            return true;
+        }
+        int distToWall = getDistanceToWallByCarDirection(PI / 60);
+
+        if ((abs(distToWall - carHeight / 2) < 20)
+                || (distToWall <= carHeight && curSpeed.module() >= 10)
+                || (distToWall < carHeight && goBack == 0
+                && curSpeed.module() == 0
+                && world.getTick() > startTick + 10)) {
+            goBack = numberOfTickToGoBack;
+            System.out.println("goBack starts!");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * совершения хода, при котором машина сдает назад
+     */
+    private void goingBack() {
+        Vector carVector = new Vector(self.getAngle());
+        //1 - едем вперед, -1 - назад
+        int goingDirection = curSpeed.getPositiveAngle(carVector) <= PI / 2 ? 1 : -1;
+        move.setBrake(false);
+        move.setSpillOil(false);
+        move.setUseNitro(false);
+        if (goBack > 0.4 * numberOfTickToGoBack) {
+            move.setEnginePower(-1.0);
+            //если скорость направленна в сторону капота
+            if (goingDirection == 1 && curSpeed.length() > 5e-1) {
+                move.setBrake(true);
+                move.setEnginePower(0);
+                if (goBack % 2 == 0) {
+                    goBack += 3;
+                }
+            }
+            /* if (goBack % 3 == 0) {
+             goBack++;
+             }*/
+        } else {
+            // если скорость направленна в сторону капота
+            if (goingDirection == 1 || curSpeed.module() < 2) {
+                goBack *= 1.5;
+            } else {
+                if (curSpeed.module() > 2) {
+                    move.setBrake(true);
+                    //goBack++;
+                } else {
+                    if (goBack > 0.1 * numberOfTickToGoBack) {
+                        move.setEnginePower(0.01);
+                    } else {
+                        move.setEnginePower(1);
+                    }
+                }
+            }
+        }
+        // если на предыдущем ходу тоже сдавали задний ход
+       /* if (abs(previousMove.getEnginePower() + 1) < 1e-2) {
+         move.setWheelTurn(previousMove.getWheelTurn());
+         } else {
+         move.setWheelTurn(signum(previousMove.getWheelTurn()) * 1);
+         }*/
+        if (goingDirection == 1 || goBack >= 0.6 * numberOfTickToGoBack) {
+            move.setWheelTurn(0);
+        } else {
+            Vector toNextWasyPoint = new Vector(nextWayPoint.x - self.getX(), nextWayPoint.y - self.getY());
+            double angleToWaypoint = curSpeed.getAngle(toNextWasyPoint);
+
+            if (goBack >= 0.4 * numberOfTickToGoBack) {
+                move.setWheelTurn(signum(getWheelTurn(angleToWaypoint)));
+                if (abs(angleToWaypoint) > PI / 2 && curSpeed.module() == 0) {
+                    goBack += 2;
+                }
+            } else {
+                getWheelTurn(angleToWaypoint);
+            }
+        }
+    }
+
+    /**
      * метод вызываемый из вне, для совершения хода
      */
     @Override
     public void move() {
+        System.out.println("Tick №" + world.getTick() + " starts");
         initialization();
-        makeMove();
+        if (world.getTick() >= startTick) {
+            makeMove();
+        }
+        printDenug();
         finalizeMove();
+        System.out.println("Tick №" + world.getTick() + " ends");
+    }
+
+    /**
+     * отладочный вывод в консоль
+     */
+    private void printDenug() {
+        System.out.println("car center: (" + selfX + " , " + selfY + ")   speed: " + curSpeed + "   curEnginePower: " + move.getEnginePower());
+        if (curSpeed.y > 0 && goBack > 0) {
+            for (int i = 0; i < 10; i++) {
+                System.out.println("Speed>0!!!!!!!!!!!      timeDiff: " + (numberOfTickToGoBack - goBack));
+            }
+        }
     }
 
     /**
@@ -162,7 +309,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setThrowProjectile(true);
             move.setSpillOil(true);
         }
-        if (world.getTick() > 180 && abs(move.getEnginePower() - 1) < 0.05) {
+        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05) {
             move.setUseNitro(true);
         }
         if (world.getTick() == 182) {
@@ -234,26 +381,27 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      *
      * @param car машина
      * @param deltaAngle угол отклонения от вектора скорости
+     * @param directionVector направление в котором ищем стену (равняется
+     * вектору скорости или вектору направления авто)
      * @return расстояние до стены
      */
-    int getDistanceToWall(Car car, double deltaAngle) {
+    int getDistanceToWall(Car car, double deltaAngle, Vector directionVector) {
         int carColor = getColorOfCar(car);
         int carX = (int) getRelativeCoordinate(car.getX());
         int carY = (int) getRelativeCoordinate(car.getY());
-        Vector carSpeed = new Vector(car.getSpeedX(), car.getSpeedY());
-        if (carSpeed.length() < 1e-1) {
+        if (directionVector.length() < 1e-1) {
             return tileSize;
         }
-        carSpeed.normalize();
-        while (max(abs(carSpeed.x), abs(carSpeed.y)) <= 1) {
-            carSpeed.x *= 1.02;
-            carSpeed.y *= 1.02;
+        directionVector.normalize();
+        while (max(abs(directionVector.x), abs(directionVector.y)) <= 1) {
+            directionVector.x *= 1.001;
+            directionVector.y *= 1.001;
         }
         final int numberOfTurns = 40;
         double turnAngle;
 
         for (int d = 1; d <= tileSize; d++) {
-            Vector vector = new Vector(carSpeed);
+            Vector vector = new Vector(directionVector);
             vector.rotateVector(-deltaAngle);
 
             turnAngle = 2 * deltaAngle / numberOfTurns;
@@ -270,7 +418,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                     }
                 }
 
-                if (getCurTile(x, y) != wall) {
+                if (getCurTile(x, y) == wall) {
                     return d;
                 }
                 vector.rotateVector(turnAngle);
@@ -283,13 +431,30 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
-     * находим расстояние от центра собственной машины до ближайшей стены
+     * находим расстояние от центра собственной машины до ближайшей стены за
+     * направление поиска берем вектор СКОРОСТИ авто
      *
      * @param deltaAngle угол отклонения от вектора скорости
      * @return расстояние до стены
      */
-    int getDistanceToWall(double deltaAngle) {
-        return getDistanceToWall(self, deltaAngle);
+    int getDistanceToWallBySpeed(double deltaAngle) {
+        Vector direvtionVector = new Vector(curSpeed);
+        if (direvtionVector.module() == 0) {
+            direvtionVector.getVectorByAngle(self.getAngle());
+        }
+        return getDistanceToWall(self, deltaAngle, direvtionVector);
+    }
+
+    /**
+     * находим расстояние от центра собственной машины до ближайшей стены за
+     * направление поиска берем вектор НАПРАВЛЕНИЯ авто
+     *
+     * @param deltaAngle угол отклонения от вектора скорости
+     * @return расстояние до стены
+     */
+    int getDistanceToWallByCarDirection(double deltaAngle) {
+        Vector direvtionVector = new Vector(self.getAngle());
+        return getDistanceToWall(self, deltaAngle, direvtionVector);
     }
 
     /**

@@ -6,50 +6,52 @@ import static java.lang.StrictMath.*;
  * @author Wasyl
  */
 public class Vector extends Point {
-    
+
     public Vector() {
         x = 0;
         y = 0;
     }
+
     /**
      * создает вектор с заданным углом с осью абсцисс
-     * @param angle 
+     *
+     * @param angle
      */
     public Vector(double angle) {
         x = 0;
         y = 0;
         getVectorByAngle(angle);
     }
-    
+
     public Vector(double x, double y) {
         this.x = x;
         this.y = y;
     }
-    
+
     public Vector(Point p) {
         this.x = p.x;
         this.y = p.y;
     }
-    
+
     @Override
     public String toString() {
         double v = hypot(x, y);
         return " ( " + x + " , " + y + " ) : |" + v + "|";
     }
-    
+
     public double length() {
         return hypot(x, y);
     }
-    
+
     public boolean equals(Vector v2) {
         if (abs(length()) < EPS && abs(v2.length()) < EPS) {
             return true;
         }
-        
+
         if (abs(length() * v2.length()) < EPS) {
             return false;
         }
-        
+
         return abs(x * v2.y - y * v2.x) < EPS;
     }
 
@@ -66,20 +68,21 @@ public class Vector extends Point {
         }
         return abs(getAngle(v));
     }
-    
+
     /**
      * ориентированный угол между векторами
+     *
      * @param v
-     * @return 
+     * @return
      */
     public double getAngle(Vector v) {
-        return atan2(x*v.y - v.x*y, x*v.x + y*v.y);
+        return atan2(x * v.y - v.x * y, x * v.x + y * v.y);
     }
-    
+
     public double getAngleToOX() {
         return (Math.atan2(x, -y) - Math.atan2(1, 0));
     }
-    
+
     public void printVector() {
         System.out.println(toString());
     }
@@ -104,7 +107,7 @@ public class Vector extends Point {
             y /= length;
         }
     }
-    
+
     public int sgnMultiplyVectors(Vector p2) {
         double t = multiplyVectors(p2);
         if (Math.abs(t) < 1e-6) {
@@ -115,7 +118,7 @@ public class Vector extends Point {
         }
         return -1;
     }
-    
+
     public void rotateVector(double phi) {
         double xNew = x * cos(phi) - y * sin(phi);
         double yNew = x * sin(phi) + y * cos(phi);
@@ -138,8 +141,32 @@ public class Vector extends Point {
             y = -1;
             return;
         }
-        x = 1;
-        y = tan(angle);
+        if (abs(angle) < PI / 2) {
+            x = 1;
+            y = tan(angle);
+        } else {
+            x = -1;
+            y = -tan(angle);
+        }
     }
-    
+
+    /**
+     * целая часть длинны
+     *
+     * @return целую часть от длинны вектора
+     */
+    public int module() {
+        return (int) length();
+    }
+
+    /**
+     * устанавливает вектор эквивалентным другой точке/вектору
+     *
+     * @param p
+     */
+    public void SetEqual(Point p) {
+        this.x = p.x;
+        this.y = p.y;
+    }
+
 }
