@@ -265,4 +265,12 @@ public abstract class StrategyWslF {
         return worldMap[y][x];
     }
 
+    public int[][] getCopyWorldMap() {
+        int[][] map = new int[worldTileSize * worldHeight][worldTileSize * worldWidth];
+
+        for (int i = 0; i < worldTileSize * worldHeight; i++) {
+            System.arraycopy(worldMap[i], 0, map[i], 0, worldTileSize * worldWidth);
+        }
+        return map;
+    }
 }
