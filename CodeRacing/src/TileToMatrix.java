@@ -51,7 +51,7 @@ public class TileToMatrix {
      * заехать (стена или за стеной) 0 - можно (свободная)
      *
      * @param tileName имя тайла
-     * @return матрица 800х800
+     * @return матрица tileSizextileSize (обычно 800х800)
      */
     public int[][] getMatrix(TileType tileName) {
 
