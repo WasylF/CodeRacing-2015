@@ -169,4 +169,14 @@ public class Vector extends Point {
         this.y = p.y;
     }
 
+    /**
+     * умножает вектор на скаляр
+     *
+     * @param k скаляр
+     */
+    public void mult(double k) {
+        x *= k;
+        y *= k;
+    }
+
 }
