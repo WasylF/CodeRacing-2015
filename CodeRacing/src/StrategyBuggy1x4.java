@@ -203,6 +203,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         initialization();
         if (world.getTick() >= startTick) {
             makeMove();
+        } else {
+            if (world.getTick() == 10) {
+                calculateWorldMap();
+                //printWorldMapToFile();
+            }
         }
         printDenug();
         finalizeMove();
@@ -622,5 +627,4 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
     }
 
-    
 }

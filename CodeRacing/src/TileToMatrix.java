@@ -54,6 +54,7 @@ public class TileToMatrix {
      * @return матрица tileSizextileSize (обычно 800х800)
      */
     public int[][] getMatrix(TileType tileName) {
+        ans = new int[tileSize][tileSize];
 
         switch (tileName) {
             case EMPTY:
@@ -277,7 +278,7 @@ public class TileToMatrix {
         cutCorner(tileSize - 1, tileSize - 1, true);
     }
 
-    private void printCurTileToFile(String fileName) {
+    public void printCurTileToFile(String fileName) {
         try (FileWriter writer = new FileWriter(fileName, false)) {
             for (int x = 0; x < tileSize; x++) {
                 String s = "";

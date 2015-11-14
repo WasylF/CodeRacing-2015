@@ -1,4 +1,6 @@
 
+import java.io.FileWriter;
+import java.io.IOException;
 import model.Car;
 import model.Game;
 import model.Move;
@@ -30,6 +32,10 @@ public abstract class StrategyWslF {
      */
     public static final int opponentCar = -10;
     /**
+     * константа для отображения на матрице тайла ключевой точки
+     */
+    public static final int wayPoint = -50;
+    /**
      * константа для отображения на матрице тайла пустой точки
      */
     public static final int empty = 0;
@@ -49,6 +55,10 @@ public abstract class StrategyWslF {
      * время начала заезда
      */
     public static final int startTick = 180;
+    /**
+     * размер тайла в общей карте трека
+     */
+    public static final int worldTileSize = 200;
 //end constants
 
     /**
@@ -93,6 +103,19 @@ public abstract class StrategyWslF {
      * левый верхний угол [tileSize-1][tileSize-1] - правый нижний угол
      */
     protected int[][] curTile;
+    /**
+     * карта всей трассы [0][0] - левый верхний угол
+     * [tileSize*n-1][tileSize*m-1] - правый нижний угол
+     */
+    protected int[][] worldMap;
+    /**
+     * ширина карты в тайлах
+     */
+    protected int worldWidth;
+    /**
+     * высота карты в тайлах
+     */
+    protected int worldHeight;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -130,6 +153,8 @@ public abstract class StrategyWslF {
         curTileY = (int) (self.getY() / game.getTrackTileSize());
         selfX = (int) (self.getX()) % tileSize;
         selfY = (int) (self.getY()) % tileSize;
+        worldHeight = mapTiles.length;
+        worldWidth = mapTiles[0].length;
         //carWidth = 140;//(int) (self.getWidth() + 0.1);
         //carHeight = 210;//(int) (self.getHeight() + 0.1);
     }
@@ -145,4 +170,66 @@ public abstract class StrategyWslF {
             return opponentCar;
         }
     }
+
+    /**
+     * строит карту всей трассы
+     */
+    protected void calculateWorldMap() {
+        worldMap = new int[worldHeight * worldTileSize][worldWidth * worldTileSize];
+        TileToMatrix worldTile = new TileToMatrix(world, game, move, self, worldTileSize, worldTileSize / 10);
+        int[][] tileMatrix;
+        for (int i = 0; i < worldHeight; i++) {
+            for (int j = 0; j < worldWidth; j++) {
+                tileMatrix = worldTile.getMatrix(mapTiles[i][j]);
+                //worldTile.printCurTileToFile("tile "+i+" "+j+" .txt");
+                for (int q = 0; q < worldTileSize; q++) {
+                    System.arraycopy(tileMatrix[q], 0, worldMap[j * worldTileSize + q], i * worldTileSize, worldTileSize);
+                }
+            }
+        }
+
+        int[][] wayPoints = world.getWaypoints();
+        for (int[] wayPoint1 : wayPoints) {
+            int x = wayPoint1[0] * worldTileSize + worldTileSize / 2;
+            int y = wayPoint1[1] * worldTileSize + worldTileSize / 2;
+            for (int delta1 = -worldTileSize / 7; delta1 < worldTileSize / 7; delta1++) {
+                for (int delta2 = -worldTileSize / 7; delta2 < worldTileSize / 7; delta2++) {
+                    worldMap[y + delta1][x + delta2] = wayPoint;
+                }
+            }
+        }
+    }
+
+    /**
+     * печатает в файл worldMap.txt схематическое изображение текущего тайла
+     */
+    protected void printWorldMapToFile() {
+        try (FileWriter writer = new FileWriter("WorldMap.txt", false)) {
+            for (int x = 0; x < worldHeight * worldTileSize; x++) {
+                String s = "";
+                for (int y = 0; y < worldWidth * worldTileSize; y++) {
+                    switch (worldMap[x][y]) {
+                        case selfCar:
+                            s += '.';
+                            break;
+                        case wall:
+                            s += '▓';
+                            break;
+                        case empty:
+                            s += ' ';
+                            break;
+                        case wayPoint:
+                            s += '@';
+                            break;
+                    }
+                }
+
+                writer.write(s + "\r\n");
+            }
+        } catch (IOException ex) {
+
+            System.out.println(ex.getMessage());
+        }
+    }
+
 }
