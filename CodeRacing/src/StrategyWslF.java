@@ -11,6 +11,11 @@ import model.World;
  */
 public abstract class StrategyWslF {
 
+    Car self;
+    World world;
+    Game game;
+    Move move;
+
     //constants below
     /**
      * константа для отображения на матрице тайла собственной машины
@@ -32,74 +37,69 @@ public abstract class StrategyWslF {
      * константа для отображения на матрице тайла ограждения/стен
      */
     public static final int wall = -100;
+    /**
+     * ширина машины (140)
+     */
+    public static final int carWidth = 140;
+    /**
+     * высота машины (210)
+     */
+    public static final int carHeight = 210;
+    /**
+     * время начала заезда
+     */
+    public static final int startTick = 180;
 //end constants
 
     /**
      * convert tile to matrix 800x800 with margin 80
      */
-    TileToMatrix tileToMatrix;
+    protected TileToMatrix tileToMatrix;
     /**
      * convert tile to matrix 80x80 with margin 8
      */
-    TileToMatrix tileToMatrix80;
+    protected TileToMatrix tileToMatrix80;
 
-    Car self;
-    World world;
-    Game game;
-    Move move;
     /**
      * карта тайлов
      */
-    TileType[][] mapTiles;
+    protected TileType[][] mapTiles;
     /**
      * абсцисса текущего тайла на карте тайлов
      */
-    int curTileX;
+    protected int curTileX;
     /**
      * ордината текущего тайла на карте тайлов
      */
-    int curTileY;
+    protected int curTileY;
     /**
      * абсцисса центра машины относительно текущего тайла
      */
-    int selfX;
+    protected int selfX;
     /**
      * ордината центра машина относительно текущего тайла
      */
-    int selfY;
+    protected int selfY;
     /**
      * длинна/ширина тайла
      */
-    int tileSize;
+    protected int tileSize;
     /**
      * радиус закругления
      */
-    int marginSize;
+    protected int marginSize;
     /**
      * матрица 800х800 которая отображает состаяние текущего тайла [0][0] -
      * левый верхний угол [tileSize-1][tileSize-1] - правый нижний угол
      */
-    int[][] curTile;
-    /**
-     * ширина машины (140)
-     */
-    int carWidth;
-    /**
-     * высота машины (210)
-     */
-    int carHeight;
-
-    /**
-     * время начала заезда
-     */
-    static final int startTick = 180;
+    protected int[][] curTile;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
         move();
     }
 
-    public abstract void move();
+    protected abstract void move();
 
     protected void initAll(Car self, World world, Game game, Move move) {
         this.self = self;
@@ -130,8 +130,8 @@ public abstract class StrategyWslF {
         curTileY = (int) (self.getY() / game.getTrackTileSize());
         selfX = (int) (self.getX()) % tileSize;
         selfY = (int) (self.getY()) % tileSize;
-        carWidth = 140;//(int) (self.getWidth() + 0.1);
-        carHeight = 210;//(int) (self.getHeight() + 0.1);
+        //carWidth = 140;//(int) (self.getWidth() + 0.1);
+        //carHeight = 210;//(int) (self.getHeight() + 0.1);
     }
 
     protected int getColorOfCar(Car car) {

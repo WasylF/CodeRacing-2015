@@ -304,6 +304,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
     }
 
+    /**
+     * активирует расходники, если нужно
+     */
     private void activateIfNeedAmmo() {
         if (world.getTick() != 0 && world.getTick() % 555 == 0) {
             move.setThrowProjectile(true);
@@ -385,7 +388,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * вектору скорости или вектору направления авто)
      * @return расстояние до стены
      */
-    int getDistanceToWall(Car car, double deltaAngle, Vector directionVector) {
+    private int getDistanceToWall(Car car, double deltaAngle, Vector directionVector) {
         int carColor = getColorOfCar(car);
         int carX = (int) getRelativeCoordinate(car.getX());
         int carY = (int) getRelativeCoordinate(car.getY());
@@ -437,7 +440,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @param deltaAngle угол отклонения от вектора скорости
      * @return расстояние до стены
      */
-    int getDistanceToWallBySpeed(double deltaAngle) {
+    private int getDistanceToWallBySpeed(double deltaAngle) {
         Vector direvtionVector = new Vector(curSpeed);
         if (direvtionVector.module() == 0) {
             direvtionVector.getVectorByAngle(self.getAngle());
@@ -452,7 +455,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @param deltaAngle угол отклонения от вектора скорости
      * @return расстояние до стены
      */
-    int getDistanceToWallByCarDirection(double deltaAngle) {
+    private int getDistanceToWallByCarDirection(double deltaAngle) {
         Vector direvtionVector = new Vector(self.getAngle());
         return getDistanceToWall(self, deltaAngle, direvtionVector);
     }
@@ -463,7 +466,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @param t входная координата
      * @return подкорректированная
      */
-    int getAccurateCoordinate(double t) {
+    private int getAccurateCoordinate(double t) {
         t = max(t, 0);
         t = min(t, tileSize - 1);
         return (int) t;
@@ -473,7 +476,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * получает схематическое изображение текущего тайла с учетом собстевенной
      * машины, планируется добавить машины соперников
      */
-    void calculateCurTile() {
+    private void calculateCurTile() {
         curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
 
         Point[] rectangleCar = getCarVertexCoordinates(self);
@@ -619,4 +622,5 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
     }
 
+    
 }
