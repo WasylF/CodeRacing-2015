@@ -1,6 +1,9 @@
 
 import java.io.FileWriter;
 import java.io.IOException;
+import static java.lang.StrictMath.abs;
+import java.util.LinkedList;
+import java.util.Queue;
 import model.Car;
 import model.Game;
 import model.Move;
@@ -59,6 +62,10 @@ public abstract class StrategyWslF {
      * размер тайла в общей карте трека
      */
     public static final int worldTileSize = 80;
+    /**
+     * размер закругления в общей карте трека
+     */
+    public static final int worldMarginSize = worldTileSize / 10;
 //end constants
 
     /**
@@ -116,6 +123,35 @@ public abstract class StrategyWslF {
      * высота карты в тайлах
      */
     protected int worldHeight;
+    /**
+     * список номеров тайлов в порядке обхода, повторенные трижды. Каждый тайл
+     * задаётся массивом длины 2, где элемент с индексом {@code 0} содержит
+     * позицию X, а элемент с индексом {@code 1} --- позицию Y. Конвертировать
+     * позицию в точные координаты можно, используя значение
+     * {@code tileSize/worldTileSize}. Для прохождения круга кодемобилю
+     * необходимо посещать тайлы в указанном порядке.
+     */
+    protected int[][] allWayPoints;
+
+    /**
+     * массив ключевых тайлов. Каждый тайл задаётся массивом длины 2, где
+     * элемент с индексом {@code 0} содержит позицию X, а элемент с индексом
+     * {@code 1} --- позицию Y. Конвертировать позицию в точные координаты
+     * можно, используя значение {@code game.trackTileSize}. Для прохождения
+     * круга кодемобилю необходимо посещать тайлы в указанном порядке. Ключевой
+     * тайл с индексом {@code 0} является одновременно начальным тайлом трассы и
+     * конечным тайлом каждого круга. Считается, что кодемобиль посетил ключевой
+     * тайл, если центр кодемобиля пересёк границу этого тайла.
+     */
+    protected int[][] systemWayPoints;
+    /**
+     * текущий размер массива allWayPoints
+     */
+    protected int curAllWayPointsSize;
+    /**
+     * тру, если уже развернули
+     */
+    protected boolean isAllWayPointReversed;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -133,19 +169,6 @@ public abstract class StrategyWslF {
         tileToMatrix = new TileToMatrix(world, game, move, self);
         tileToMatrix80 = new TileToMatrix(world, game, move, self, 80, 8);
 
-        /*
-         {
-         //int[][] curTile = tileToMatrix.getMatrix(TileType.LEFT_TOP_CORNER);
-         int[][] curTile = tileToMatrix80.getMatrix(TileType.CROSSROADS);
-         for (int i= 0; i<80; i++)
-         {
-         for (int j= 0; j<80; j++)
-         {
-         System.out.print(curTile[i][j]);
-         }
-         System.out.println();
-         }
-         }*/
         mapTiles = world.getTilesXY();
         tileSize = (int) (game.getTrackTileSize() + 0.1);
         marginSize = (int) (game.getTrackTileMargin() + 0.1);
@@ -157,6 +180,13 @@ public abstract class StrategyWslF {
         worldWidth = mapTiles[0].length;
         //carWidth = 140;//(int) (self.getWidth() + 0.1);
         //carHeight = 210;//(int) (self.getHeight() + 0.1);
+
+        int[][] tWayPoints = world.getWaypoints();
+        systemWayPoints = new int[tWayPoints.length * 3][2];
+        System.arraycopy(tWayPoints, 0, systemWayPoints, 0, tWayPoints.length);
+        System.arraycopy(tWayPoints, 0, systemWayPoints, tWayPoints.length, tWayPoints.length);
+        System.arraycopy(tWayPoints, 0, systemWayPoints, 2 * tWayPoints.length, tWayPoints.length);
+
     }
 
     protected int getColorOfCar(Car car) {
@@ -174,37 +204,39 @@ public abstract class StrategyWslF {
     /**
      * строит карту всей трассы
      */
-    protected void calculateWorldMap() {
-        worldMap = new int[worldHeight * worldTileSize][worldWidth * worldTileSize];
-        TileToMatrix worldTile = new TileToMatrix(world, game, move, self, worldTileSize, worldTileSize / 10);
+    protected int[][] calculateWorldMap(int wTileSize) {
+        int[][] wMap = new int[worldHeight * wTileSize][worldWidth * wTileSize];
+        TileToMatrix worldTile = new TileToMatrix(world, game, move, self, wTileSize, wTileSize / 10);
         int[][] tileMatrix;
         for (int i = 0; i < worldHeight; i++) {
             for (int j = 0; j < worldWidth; j++) {
                 tileMatrix = worldTile.getMatrix(mapTiles[i][j]);
                 //worldTile.printCurTileToFile("tile "+i+" "+j+" .txt");
-                for (int q = 0; q < worldTileSize; q++) {
-                    System.arraycopy(tileMatrix[q], 0, worldMap[j * worldTileSize + q], i * worldTileSize, worldTileSize);
+                for (int q = 0; q < wTileSize; q++) {
+                    System.arraycopy(tileMatrix[q], 0, wMap[j * wTileSize + q], i * wTileSize, wTileSize);
                 }
             }
         }
 
-        int[][] wayPoints = world.getWaypoints();
-        for (int[] wayPoint1 : wayPoints) {
-            int x = wayPoint1[0] * worldTileSize + worldTileSize / 2;
-            int y = wayPoint1[1] * worldTileSize + worldTileSize / 2;
-            for (int delta1 = -worldTileSize / 7; delta1 < worldTileSize / 7; delta1++) {
-                for (int delta2 = -worldTileSize / 7; delta2 < worldTileSize / 7; delta2++) {
-                    worldMap[y + delta1][x + delta2] = wayPoint;
-                }
-            }
-        }
+        /* нанесение системных ключевых точек
+         int[][] wayPoints = world.getWaypoints();
+         for (int[] wayPoint1 : wayPoints) {
+         int x = wayPoint1[0] * worldTileSize + worldTileSize / 2;
+         int y = wayPoint1[1] * worldTileSize + worldTileSize / 2;
+         for (int delta1 = -worldTileSize / 7; delta1 < worldTileSize / 7; delta1++) {
+         for (int delta2 = -worldTileSize / 7; delta2 < worldTileSize / 7; delta2++) {
+         worldMap[y + delta1][x + delta2] = wayPoint;
+         }
+         }
+         }*/
+        return wMap;
     }
 
     /**
      * печатает в файл worldMap.txt схематическое изображение текущего тайла
      */
-    protected void printWorldMapToFile() {
-        try (FileWriter writer = new FileWriter("WorldMap.txt", false)) {
+    protected void printWorldMapToFile(String fileName) {
+        try (FileWriter writer = new FileWriter(fileName, false)) {
             for (int x = 0; x < worldHeight * worldTileSize; x++) {
                 String s = "";
                 for (int y = 0; y < worldWidth * worldTileSize; y++) {
@@ -221,6 +253,42 @@ public abstract class StrategyWslF {
                         case wayPoint:
                             s += '@';
                             break;
+                        default:
+                            s += (worldMap[x][y]) % 10;
+                    }
+                }
+
+                writer.write(s + "\r\n");
+            }
+        } catch (IOException ex) {
+
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    /**
+     * печатает в файл worldMap.txt схематическое изображение текущего тайла
+     */
+    protected void printWorldMapToFile(int[][] wMap, int wTileSize, String fileName) {
+        try (FileWriter writer = new FileWriter(fileName, false)) {
+            for (int x = 0; x < worldHeight * wTileSize; x++) {
+                String s = "";
+                for (int y = 0; y < worldWidth * wTileSize; y++) {
+                    switch (wMap[x][y]) {
+                        case selfCar:
+                            s += '.';
+                            break;
+                        case wall:
+                            s += '▓';
+                            break;
+                        case empty:
+                            s += ' ';
+                            break;
+                        case wayPoint:
+                            s += '@';
+                            break;
+                        default:
+                            s += (wMap[x][y]) % 10;
                     }
                 }
 
@@ -239,7 +307,7 @@ public abstract class StrategyWslF {
      * @param y ордината
      * @param val значение
      */
-    public boolean setCurWorldMap(int x, int y, int val) {
+    public boolean setWorldMap(int x, int y, int val) {
         if (x < 0 || y < 0
                 || x >= worldTileSize * worldHeight
                 || y >= worldTileSize * worldWidth) {
@@ -256,7 +324,7 @@ public abstract class StrategyWslF {
      * @param y ордината
      * @return значение в текущем тайле (стена/пусто/своя машина/...)
      */
-    protected int getCurWorldMap(int x, int y) {
+    protected int getWorldMap(int x, int y) {
         if (x < 0 || y < 0
                 || x >= worldTileSize * worldHeight
                 || y >= worldTileSize * worldWidth) {
@@ -265,6 +333,10 @@ public abstract class StrategyWslF {
         return worldMap[y][x];
     }
 
+    /**
+     *
+     * @return копию матрици карты
+     */
     public int[][] getCopyWorldMap() {
         int[][] map = new int[worldTileSize * worldHeight][worldTileSize * worldWidth];
 
@@ -273,4 +345,179 @@ public abstract class StrategyWslF {
         }
         return map;
     }
+
+    /**
+     *
+     * @param ar входной двумерный массив
+     * @return копия двумерного массива
+     */
+    public int[][] get2DArrayCopy(int[][] ar) {
+        int[][] copy = new int[ar.length][ar[0].length];
+
+        for (int i = 0; i < ar.length; i++) {
+            System.arraycopy(ar[i], 0, copy[i], 0, ar[0].length);
+        }
+
+        return copy;
+    }
+
+    /**
+     * вычисление координаты для доступа к матрице карты
+     *
+     * @param absolute абсолютная координата
+     * @return относительную координату
+     */
+    public int convertToWorldCordinate(double absolute) {
+        return (int) (absolute * worldTileSize) / tileSize;
+    }
+
+    public int convertToAbsoluteCordinate(double worldCordinate) {
+        return (int) (worldCordinate * tileSize) / worldTileSize;
+    }
+
+    protected void calculateAllWayPoints() {
+        int startTileX = systemWayPoints[0][0];
+        int startTileY = systemWayPoints[0][1];
+
+        int numberOfSystemWayPoints = world.getWaypoints().length;
+        allWayPoints[0] = new int[]{startTileX, startTileY};
+        curAllWayPointsSize = 1;
+        int smallWorldTile = 10;
+        int[][] smallWorld = calculateWorldMap(smallWorldTile);
+        printWorldMapToFile(smallWorld, smallWorldTile, "smallWorld.txt");
+
+        for (int i = 1; i <= numberOfSystemWayPoints; i++) {
+            int[][] sWorld = get2DArrayCopy(smallWorld);
+            int cTileX = systemWayPoints[i - 1][0];
+            int cTileY = systemWayPoints[i - 1][1];
+            int nTileX = systemWayPoints[i][0];
+            int nTileY = systemWayPoints[i][1];
+            int destination = 2_000_000_000;
+            int x = (int) ((cTileX + 0.5) * smallWorldTile);
+            int y = (int) ((cTileY + 0.5) * smallWorldTile);
+            sWorld[y][x] = 1;
+            sWorld[(int) ((nTileY + 0.5) * smallWorldTile)][(int) ((nTileX + 0.5) * smallWorldTile)] = destination;
+
+            int n = 10000;
+            Queue<Integer> queue = new LinkedList<>();
+            Queue<Integer> qBack = new LinkedList<>();
+            queue.add(x * n + y);
+            ForwardBFS_ForAllWayPoints(queue, qBack, n, destination, sWorld);
+            LinkedList<Integer> list = BackwordBFS_ForAllWayPoints(qBack, n, sWorld, smallWorldTile);
+            while (!list.isEmpty()) {
+                int cur = list.pollLast();
+                x = cur / n;
+                y = cur % n;
+                if (allWayPoints[curAllWayPointsSize - 1][0] != x
+                        || allWayPoints[curAllWayPointsSize - 1][1] != y) {
+                    allWayPoints[curAllWayPointsSize++] = new int[]{x, y};
+                }
+            }
+        }
+
+        for (int i = 0; i < curAllWayPointsSize; i++) {
+            System.out.println("tile: " + allWayPoints[i][0] + " " + allWayPoints[i][1]);
+        }
+
+        int awpSize = curAllWayPointsSize;
+        for (int i = 0; i < curAllWayPointsSize; i++) {
+            allWayPoints[awpSize + i] = allWayPoints[i];
+            allWayPoints[awpSize * 2 + i] = allWayPoints[i];
+        }
+
+        curAllWayPointsSize *= 3;
+
+        System.out.println();
+        System.out.println();
+        for (int i = 0; i < curAllWayPointsSize; i++) {
+            System.out.println("tile: " + allWayPoints[i][0] + " " + allWayPoints[i][1]);
+        }
+    }
+
+    /**
+     * поиска в ширину с целью нахождения следующей ключевой точки пути и
+     * расстояния до следующей системной целевой точки
+     *
+     * @param queue очередь, содержащая стартовые точки
+     * @param qBack очередь точек соседних с финальными
+     * @param n множитель для обработки пары чисел в формате first*n+second
+     * @param destination метка финальной точки
+     * @return расстояния до следующей системной целевой точки
+     */
+    private int ForwardBFS_ForAllWayPoints(Queue<Integer> queue, Queue<Integer> qBack,
+            int n, final int destination, int[][] sWorld) {
+        int x, y, cur;
+        int distance = 2_000_000_000;
+
+        while (!queue.isEmpty()) {
+            cur = queue.poll();
+            x = cur / n;
+            y = cur % n;
+            cur = sWorld[y][x];
+            if (cur > distance) {
+                continue;
+            }
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    if (abs(i + j) == 1) {
+                        //System.out.println((y + j) + "    -     " + (x + i));
+                        int tmp = sWorld[y + j][x + i];
+                        if (tmp == empty) {
+                            sWorld[y + j][x + i] = cur + 1;
+                            queue.add((x + i) * n + (y + j));
+                        }
+                        if (tmp == destination) {
+                            sWorld[y][x] = 2 * cur;
+                            qBack.add(x * n + y);
+                            //qBack.add(new PointAnglePrev(x, y, 0, new Point()));
+                            if (cur < distance) {
+                                distance = cur;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return distance;
+    }
+
+    /**
+     * обратный поиск в ширину для нахождения следующей ключевой точки пути
+     *
+     * @param qBack очередь достигнутых точек соседних с финальными
+     * @param n множитель для обработки пары чисел в формате first*n+second
+     * @param distance расстояние на котором ищем следующую ключевую точку
+     * @return множество точек на расстоянии distance
+     */
+    private LinkedList<Integer> BackwordBFS_ForAllWayPoints(Queue<Integer> qBack,
+            int n, int[][] sWorld, int sWorldTile) {
+        boolean[][] used = new boolean[20][20];
+        LinkedList<Integer> ans = new LinkedList<>();
+
+        int x, y, cur;
+        while (!qBack.isEmpty()) {
+            cur = qBack.poll();
+            x = cur / n;
+            y = cur % n;
+            int tX = x / sWorldTile;
+            int tY = y / sWorldTile;
+            if (!used[tX][tY]) {
+                used[tX][tY] = true;
+                ans.add(n * tX + tY);
+            }
+            cur = sWorld[y][x] / 2;
+            sWorld[y][x] = empty;
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    if (sWorld[y + j][x + i] == cur - 1) {
+                        qBack.add((x + i) * n + (y + j));
+                        sWorld[y + j][x + i] = (cur - 1) * 2;
+                    }
+                }
+            }
+        }
+        return ans;
+    }
+
 }
