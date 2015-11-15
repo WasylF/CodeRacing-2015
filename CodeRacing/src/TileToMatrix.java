@@ -94,6 +94,9 @@ public class TileToMatrix {
             case CROSSROADS:
                 getCrossRoads();
                 break;
+            default:
+                getClear();
+                break;
         }
         return ans;
     }
@@ -301,6 +304,14 @@ public class TileToMatrix {
         } catch (IOException ex) {
 
             System.out.println(ex.getMessage());
+        }
+    }
+
+    private void getClear() {
+        for (int x = 0; x < tileSize; x++) {
+            for (int y = 0; y < tileSize; y++) {
+                ans[x][y] = empty;
+            }
         }
     }
 

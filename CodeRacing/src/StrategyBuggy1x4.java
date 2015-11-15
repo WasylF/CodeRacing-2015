@@ -220,9 +220,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 worldMap = calculateWorldMap(worldTileSize);
                 //  printWorldMapToFile("WorldMap" + world.getTick() + ".txt");
             }
-            if (world.getTick() == 2) {
+            if (world.getTick() == 100) {
                 allWayPoints = new int[1000][2];
                 calculateAllWayPoints();
+                curPositionInAllPoints= 0;
             }
         }
         finalizeMove();
@@ -386,23 +387,63 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return точка в направлении которой машина будет двигаться
      */
     private Point getNextWayPoint() {
-        int nextTileX = self.getNextWaypointX();
-        int nextTileY = self.getNextWaypointY();
-        Point nextPoint = getNextWayPoint(nextTileX, nextTileY);
-        while (nextPoint.equals(new Point(-1, -1))) {
-            int[][] tWayPoints = world.getWaypoints();
-            int[][] systemWayPoints = new int[tWayPoints.length + 1][2];
-            System.arraycopy(tWayPoints, 0, systemWayPoints, 0, tWayPoints.length);
-            systemWayPoints[tWayPoints.length] = systemWayPoints[0];
-            int k = 0;
-            while (systemWayPoints[k][0] != nextTileX || systemWayPoints[k][1] != nextTileY) {
-                k++;
-            }
-            nextTileX = systemWayPoints[k + 1][0];
-            nextTileY = systemWayPoints[k + 1][1];
-            nextPoint = getNextWayPoint(nextTileX, nextTileY);
+        /*        int nextTileX = self.getNextWaypointX();
+         int nextTileY = self.getNextWaypointY();
+         Point nextPoint = getNextWayPoint(nextTileX, nextTileY);
+         while (nextPoint.equals(new Point(-1, -1))) {
+         int[][] tWayPoints = world.getWaypoints();
+         int[][] systemWayPoints = new int[tWayPoints.length + 1][2];
+         System.arraycopy(tWayPoints, 0, systemWayPoints, 0, tWayPoints.length);
+         systemWayPoints[tWayPoints.length] = systemWayPoints[0];
+         int k = 0;
+         while (systemWayPoints[k][0] != nextTileX || systemWayPoints[k][1] != nextTileY) {
+         k++;
+         }
+         nextTileX = systemWayPoints[k + 1][0];
+         nextTileY = systemWayPoints[k + 1][1];
+         nextPoint = getNextWayPoint(nextTileX, nextTileY);
+         }
+         return nextPoint;*/
+        int curTileX = (int) (self.getX() / game.getTrackTileSize());
+        int curTileY = (int) (self.getY() / game.getTrackTileSize());
+        PairIntInt nextTile = getNextTile(curTileX, curTileY);
+
+        final double koef = 0.35;
+        double nextWaypointX = (nextTile.first + 0.5D) * tileSize;
+        double nextWaypointY = (nextTile.second + 0.5D) * tileSize;
+
+        double curX = getNotToCloseToWall(selfX);
+        double curY = getNotToCloseToWall(selfY);
+
+        double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
+        switch (mapTiles[nextTile.first][nextTile.second]) {
+            case LEFT_TOP_CORNER:
+                nextWaypointX += cornerTileOffset;
+                nextWaypointY += cornerTileOffset;
+                break;
+            case RIGHT_TOP_CORNER:
+                nextWaypointX -= cornerTileOffset;
+                nextWaypointY += cornerTileOffset;
+                break;
+            case LEFT_BOTTOM_CORNER:
+                nextWaypointX += cornerTileOffset;
+                nextWaypointY -= cornerTileOffset;
+                break;
+            case RIGHT_BOTTOM_CORNER:
+                nextWaypointX -= cornerTileOffset;
+                nextWaypointY -= cornerTileOffset;
+                break;
+            case VERTICAL:
+                nextWaypointX = nextWaypointX - 0.5 * tileSize + curX + koef * (tileSize / 2 - selfX);
+                break;
+            case HORIZONTAL:
+                nextWaypointY = nextWaypointY - 0.5 * tileSize + curY + koef * (tileSize / 2 - selfY);
+                break;
+            default:
         }
-        return nextPoint;
+
+        return new Point(nextWaypointX, nextWaypointY);
+
     }
 
     private Point getNextWayPoint(int nextTileX, int nextTileY) {
@@ -580,23 +621,23 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         int delta = worldMarginSize + (carWidth * worldTileSize / tileSize) / 2;
         switch (mapTiles[nextTileX][nextTileY]) {
-            case HORIZONTAL:
-            case VERTICAL:
-                for (int i = 0; i < worldTileSize; i++) {
-                    if (getWorldMap(nextWaypointX, nextWaypointY + i) != wall) {
-                        setWorldMap(nextWaypointX, nextWaypointY + i, destination);
-                    }
-                    if (getWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i) != wall) {
-                        setWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i, destination);
-                    }
-                    if (getWorldMap(nextWaypointX + i, nextWaypointY) != wall) {
-                        setWorldMap(nextWaypointX + i, nextWaypointY, destination);
-                    }
-                    if (getWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1) != wall) {
-                        setWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1, destination);
-                    }
-                }
-                break;
+            /*case HORIZONTAL:
+             case VERTICAL:
+             for (int i = 0; i < worldTileSize; i++) {
+             if (getWorldMap(nextWaypointX, nextWaypointY + i) != wall) {
+             setWorldMap(nextWaypointX, nextWaypointY + i, destination);
+             }
+             if (getWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i) != wall) {
+             setWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i, destination);
+             }
+             if (getWorldMap(nextWaypointX + i, nextWaypointY) != wall) {
+             setWorldMap(nextWaypointX + i, nextWaypointY, destination);
+             }
+             if (getWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1) != wall) {
+             setWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1, destination);
+             }
+             }
+             break;*/
             case LEFT_TOP_CORNER:
                 setWorldMap(nextWaypointX + worldTileSize - delta,
                         nextWaypointY + worldTileSize - delta, destination);

@@ -132,7 +132,6 @@ public abstract class StrategyWslF {
      * необходимо посещать тайлы в указанном порядке.
      */
     protected int[][] allWayPoints;
-
     /**
      * массив ключевых тайлов. Каждый тайл задаётся массивом длины 2, где
      * элемент с индексом {@code 0} содержит позицию X, а элемент с индексом
@@ -152,6 +151,15 @@ public abstract class StrategyWslF {
      * тру, если уже развернули
      */
     protected boolean isAllWayPointReversed;
+    /**
+     * массив, содержащий для каждого тайла из массива allWayPoints координаты
+     * ключевой точки(в которую мы будем пытаться заехать) в нем
+     */
+    protected Point[] allWayKeyPoints;
+    /**
+     * индекс текущего тайла в массиве allWayPoints
+     */
+    protected int curPositionInAllPoints;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -384,7 +392,7 @@ public abstract class StrategyWslF {
         curAllWayPointsSize = 1;
         int smallWorldTile = 10;
         int[][] smallWorld = calculateWorldMap(smallWorldTile);
-        printWorldMapToFile(smallWorld, smallWorldTile, "smallWorld.txt");
+        //printWorldMapToFile(smallWorld, smallWorldTile, "smallWorld.txt");
 
         for (int i = 1; i <= numberOfSystemWayPoints; i++) {
             int[][] sWorld = get2DArrayCopy(smallWorld);
@@ -460,19 +468,24 @@ public abstract class StrategyWslF {
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
                     if (abs(i + j) == 1) {
-                        //System.out.println((y + j) + "    -     " + (x + i));
-                        int tmp = sWorld[y + j][x + i];
-                        if (tmp == empty) {
-                            sWorld[y + j][x + i] = cur + 1;
-                            queue.add((x + i) * n + (y + j));
-                        }
-                        if (tmp == destination) {
-                            sWorld[y][x] = 2 * cur;
-                            qBack.add(x * n + y);
-                            //qBack.add(new PointAnglePrev(x, y, 0, new Point()));
-                            if (cur < distance) {
-                                distance = cur;
+                        System.out.println((y + j) + "    -     " + (x + i));
+                        try {
+                            int tmp = sWorld[y + j][x + i];
+                            if (tmp == empty) {
+                                sWorld[y + j][x + i] = cur + 1;
+                                queue.add((x + i) * n + (y + j));
                             }
+                            if (tmp == destination) {
+                                sWorld[y][x] = 2 * cur;
+                                qBack.add(x * n + y);
+                                //qBack.add(new PointAnglePrev(x, y, 0, new Point()));
+                                if (cur < distance) {
+                                    distance = cur;
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            System.out.println("Организаторы раньше времени и без предупреждения ввели невидимые тайлы!!!!");
                         }
                     }
                 }
@@ -520,4 +533,13 @@ public abstract class StrategyWslF {
         return ans;
     }
 
+    protected PairIntInt getNextTile(int curTileX, int curTileY) {
+        for (int i = curPositionInAllPoints; i < curAllWayPointsSize; i++) {
+            if (allWayPoints[i][0] == curTileX && allWayPoints[i][1] == curTileY) {
+                curPositionInAllPoints = i;
+                return new PairIntInt(allWayPoints[i + 1][0], allWayPoints[i + 1][1]);
+            }
+        }
+        return null;
+    }
 }
