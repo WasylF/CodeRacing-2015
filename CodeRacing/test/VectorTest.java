@@ -59,6 +59,33 @@ public class VectorTest extends TestCase {
     }
 
     /**
+     * Test of getPositiveAngle method, of class Vector.
+     */
+    public void testGetPositiveAngle2() {
+        System.out.println("getPositiveAngle");
+        Vector v = new Vector(0, 1);
+        Vector instance = new Vector(1, 0);
+        double expResult = Math.PI / 2;
+        double result = instance.getPositiveAngle(v);
+        assertEquals(expResult, result, EPS);
+    }
+
+    /**
+     * Test of getPositiveAngle method, of class Vector.
+     */
+    public void testGetPositiveAngle3() {
+        System.out.println("getPositiveAngle");
+        Vector instance = new Vector(0, 1);
+        Vector v = new Vector(1, 1000);
+        double expResult = Math.atan(1 / 1000);
+        double result = instance.getPositiveAngle(v);
+        assertEquals(expResult, result, EPS);
+
+        result = v.getPositiveAngle(instance);
+        assertEquals(expResult, result, EPS);
+    }
+
+    /**
      * Test of getAngle method, of class Vector.
      */
     public void testGetAngle0() {
@@ -154,18 +181,6 @@ public class VectorTest extends TestCase {
         assertEquals(expResult, result, EPS);
     }
 
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     /**
      * Test of getAngle method, of class Vector.
      */
@@ -261,14 +276,7 @@ public class VectorTest extends TestCase {
         double result = v.getAngle(instance);
         assertEquals(expResult, result, EPS);
     }
-    
-    
-    
-    
-    
-    
-    
-    
+
     /**
      * Test of getAngle method, of class Vector.
      */
