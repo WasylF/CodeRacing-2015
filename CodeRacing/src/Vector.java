@@ -43,6 +43,17 @@ public class Vector extends Point {
         return hypot(x, y);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+        return equals((Vector) obj);
+    }
+
     public boolean equals(Vector v2) {
         if (abs(length()) < EPS && abs(v2.length()) < EPS) {
             return true;
@@ -80,7 +91,7 @@ public class Vector extends Point {
     }
 
     public double getAngleToOX() {
-        return (Math.atan2(x, -y) - Math.atan2(1, 0));
+        return getAngle(new Vector(1, 0));
     }
 
     public void printVector() {
@@ -90,7 +101,7 @@ public class Vector extends Point {
     /**
      * векторное произведение
      *
-     * @param p2
+     * @param v2
      * @return
      */
     public double multiplyVectors(Vector v2) {
@@ -108,9 +119,15 @@ public class Vector extends Point {
         }
     }
 
+    /**
+     * signum of vectors mult
+     *
+     * @param p2 second vector
+     * @return signum
+     */
     public int sgnMultiplyVectors(Vector p2) {
         double t = multiplyVectors(p2);
-        if (Math.abs(t) < 1e-6) {
+        if (Math.abs(t) < EPS) {
             return 0;
         }
         if (t > 0) {
@@ -119,6 +136,10 @@ public class Vector extends Point {
         return -1;
     }
 
+    /**
+     * rotate this vector by clockwise on angle phi
+     * @param phi angle
+     */
     public void rotateVector(double phi) {
         double xNew = x * cos(phi) - y * sin(phi);
         double yNew = x * sin(phi) + y * cos(phi);
@@ -177,6 +198,12 @@ public class Vector extends Point {
     public void mult(double k) {
         x *= k;
         y *= k;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        return hash;
     }
 
 }

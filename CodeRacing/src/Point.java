@@ -10,7 +10,7 @@ public class Point extends Object {
 
     public double x;
     public double y;
-    protected static final double EPS = 1e-6;
+    protected static final double EPS = 1e-3;
 
     public Point() {
         x = 0;
