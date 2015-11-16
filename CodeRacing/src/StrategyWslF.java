@@ -427,8 +427,8 @@ public abstract class StrategyWslF {
             System.out.println("tile: " + allWayPoints[i][0] + " " + allWayPoints[i][1]);
         }
 
-        int awpSize = curAllWayPointsSize;
-        for (int i = 0; i < curAllWayPointsSize; i++) {
+        int awpSize = curAllWayPointsSize - 1;
+        for (int i = 1; i < curAllWayPointsSize; i++) {
             allWayPoints[awpSize + i] = allWayPoints[i];
             allWayPoints[awpSize * 2 + i] = allWayPoints[i];
         }
@@ -540,6 +540,6 @@ public abstract class StrategyWslF {
                 return new PairIntInt(allWayPoints[i + 1][0], allWayPoints[i + 1][1]);
             }
         }
-        return null;
+        return new PairIntInt(0, 0); // null
     }
 }
