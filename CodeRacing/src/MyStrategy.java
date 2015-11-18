@@ -30,6 +30,9 @@ public final class MyStrategy implements Strategy {
         if (myStrategy == null) {
             myStrategy = new StrategyBuggy1x4();
         }
+        if (world.getTick() <= 1) {
+            myStrategy.initFirst(self, world, game, move);
+        }
 
         myStrategy.move(self, world, game, move);
     }

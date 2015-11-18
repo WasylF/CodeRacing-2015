@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import model.Car;
 import model.Move;
+import model.TileType;
 
 /**
  *
@@ -126,6 +127,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (goBack > 0) {
             return true;
         }
+
+        if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-3 && previousSpeed.length() < 1e-3) {
+            goBack = numberOfTickToGoBack;
+            return true;
+        }
         int distToWall = getDistanceToWallByCarDirection(PI / 60);
 
         if ((abs(distToWall - carHeight / 2) < 20)
@@ -218,14 +224,25 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         } else {
             if (world.getTick() == 10) {
                 worldMap = calculateWorldMap(worldTileSize);
-                //  printWorldMapToFile("WorldMap" + world.getTick() + ".txt");
+                //printWorldMapToFile("WorldMapNew" + world.getTick() + ".txt");
             }
+            /*     if (world.getTick() == 100) {
+             allWayPoints = new int[1000][2];
+             calculateAllWayPoints();
+             curPositionInAllPoints = 0;
+             }
+             */
             if (world.getTick() == 100) {
-                allWayPoints = new int[1000][2];
-                calculateAllWayPoints();
-                curPositionInAllPoints= 0;
+                for (int x = worldWidth-1; x >= 0; x--) {
+                    for (int y = worldHeight-1; y >= 0; y--) {
+                        if (mapTiles[x][y] != TileType.EMPTY) {
+                            getNextTilesFor(x, y);
+                        }
+                    }
+                }
             }
         }
+
         finalizeMove();
         System.out.println("Tick №" + world.getTick() + " ends");
     }
@@ -258,7 +275,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * вычисляет значение мощности двигателя и устанавливает в move
      */
     private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
-        move.setEnginePower(0.8);
+        move.setEnginePower(0.9);
         /*        int distanceToWall = getDistanceToWall(PI / 6);
          int dist2 = getDistanceToWall(PI / 60);
 
