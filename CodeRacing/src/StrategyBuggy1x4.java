@@ -70,7 +70,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void prepearMove() {
         curSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
-        calculateCurTile();
+        tileHelper.calculateCurTile();
         nextWayPoint = getNextWayPoint();
         System.out.println("NextWayPoint: " + nextWayPoint);
     }
@@ -221,7 +221,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             prepearMove();
             makeMove();
             printDebug();
-        } 
+        }
         finalizeMove();
 
         System.out.println("Tick №" + world.getTick() + " ends");
@@ -379,7 +379,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return k * worldTileSize + t;
     }
 
-
     /**
      * находим расстояние от центра машины до ближайшей стены
      *
@@ -415,14 +414,15 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
                     x = getAccurateCoordinate(x);
                     y = getAccurateCoordinate(y);
-                    if (getCurTile(x, y) == carColor || getCurTile(x, y) == empty) {
+                    if (tileHelper.getCurTile(x, y) == carColor
+                            || tileHelper.getCurTile(x, y) == empty) {
                         return tileSize;
                     } else {
                         return d;
                     }
                 }
 
-                if (getCurTile(x, y) == wall) {
+                if (tileHelper.getCurTile(x, y) == wall) {
                     return d;
                 }
                 vector.rotateVector(turnAngle);
@@ -473,158 +473,29 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return (int) t;
     }
 
-    /**
-     * получает схематическое изображение текущего тайла с учетом собстевенной
-     * машины, планируется добавить машины соперников
-     */
-    private void calculateCurTile() {
-        curTile = tileToMatrix.getMatrix(mapTiles[curTileX][curTileY]);
-
-        Point[] rectangleCar = getCarVertexCoordinates(self);
-        Point minP = new Point();
-        Point maxP = new Point();
-        getMinMaxCoordinates(rectangleCar, minP, maxP);
-        int xMin, xMax, yMin, yMax;
-        xMin = max((int) minP.x - 1, 0);
-        yMin = max((int) minP.y - 1, 0);
-        xMax = min((int) maxP.x + 1, (int) game.getTrackTileSize() - 1);
-        yMax = min((int) maxP.y + 1, (int) game.getTrackTileSize() - 1);
-
-        for (int i = xMin; i <= xMax; i++) {
-            for (int j = yMin; j <= yMax; j++) {
-                Point p = new Point(i, j);
-                if (p.checkPointInPolygon(rectangleCar)) {
-                    setCurTile(i, j, selfCar);
-                }
-            }
-        }
-    }
-
-    /**
-     * возвращеет через minP, maxP минимальные и максимальные значения абсцисс и
-     * ординат из мн-ва точек polygon
-     *
-     * @param polygon множество точек
-     * @param minP параметр для возвращения минимальной абсциссы и ординаты
-     * @param maxP параметр для возвращения максимальной абсциссы и ординаты
-     */
-    private void getMinMaxCoordinates(Point[] polygon, Point minP, Point maxP) {
-        double xMin, xMax, yMin, yMax;
-        xMin = polygon[0].x;
-        xMax = polygon[0].x;
-        yMin = polygon[0].y;
-        yMax = polygon[0].y;
-        for (Point p : polygon) {
-            if (p.x < xMin) {
-                xMin = p.x;
-            } else if (p.x > xMax) {
-                xMax = p.x;
-            }
-
-            if (p.y < yMin) {
-                yMin = p.y;
-            } else if (p.y > yMax) {
-                yMax = p.y;
-            }
-        }
-
-        minP.x = xMin;
-        minP.y = yMin;
-        maxP.x = xMax;
-        maxP.y = yMax;
-    }
-
-    /**
-     * вычисляет относительные координаты 4 вершин машини
-     *
-     * @return массив из 4 точек - вершин машины
-     */
-    private Point[] getCarVertexCoordinates(Car car) {
-        double x = getRelativeCoordinate(car.getX());
-        double y = getRelativeCoordinate(car.getY());
-        Point carCenter = new Point(x, y);
-
-        Vector carVector = new Vector(car.getAngle());
-
-        Vector v = new Vector(carVector);
-        v.rotateVector(-PI / 2);
-
-        double k = carWidth / (2 * v.length());
-        Point M = new Point(carCenter.x + k * v.x, carCenter.y + k * v.y);
-        k = carHeight / (2 * carVector.length());
-
-        Point a = new Point(M.x + k * carVector.x, M.y + k * carVector.y);
-        Point b = a.getSymmetric(M);
-        Point c = a.getSymmetric(carCenter);
-        Point d = b.getSymmetric(carCenter);
-
-        return new Point[]{a, b, c, d};
-    }
-
-    private double getRelativeCoordinate(double c) {
-        return c - ((int) (c / tileSize)) * tileSize;
-    }
-
-    /**
-     * возвращает значение в матрице таййла, с относительными координатами (х;у)
-     *
-     * @param x абсцисса
-     * @param y ордината
-     * @return значение в текущем тайле (стена/пусто/своя машина/...)
-     */
-    private int getCurTile(int x, int y) {
-        if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
-            return wall;
-        }
-        return curTile[y][x];
-    }
-
-    /**
-     * задает значение val в матрице таййла, с относительными координатами (х;у)
-     *
-     * @param x абсцисса
-     * @param y ордината
-     * @param val значение
-     */
-    private boolean setCurTile(int x, int y, int val) {
-        if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
-            return false;
-        }
-        curTile[y][x] = val;
-        return true;
-    }
-
-    /**
-     * печатает в файл curTile.txt схематическое изображение текущего тайла
-     */
-    private void printCurTileToFile() {
-        try (FileWriter writer = new FileWriter("curTile.txt", false)) {
-            for (int x = 0; x < tileSize; x++) {
-                String s = "";
-                for (int y = 0; y < tileSize; y++) {
-                    switch (curTile[x][y]) {
-                        case selfCar:
-                            s += '.';
-                            break;
-                        case wall:
-                            s += '▓';
-                            break;
-                        case empty:
-                            s += ' ';
-                            break;
-                    }
-                }
-
-                writer.write(s + "\r\n");
-            }
-        } catch (IOException ex) {
-
-            System.out.println(ex.getMessage());
-        }
-    }
-
     private PairIntInt getNextWayPoint() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * тайл в который нужно ехать автомобилю
+     *
+     * @param curTileX
+     * @param curTileY
+     * @return
+     */
+    protected PairIntInt getNextTile(int curTileX, int curTileY) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * возвращает относительную карту (для текущего тайла) координату
+     *
+     * @param c абсолютная координата
+     * @return
+     */
+    private double getRelativeCoordinate(double c) {
+        return c - ((int) (c / tileSize)) * tileSize;
     }
 
 }

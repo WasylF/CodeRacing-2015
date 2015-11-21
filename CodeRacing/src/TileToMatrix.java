@@ -9,11 +9,6 @@ import model.*;
  */
 public class TileToMatrix {
 
-    private World world;
-    private Game game;
-    private Move move;
-    private Car car;
-
     /**
      * размер тайла конвертированный в инт
      */
@@ -28,19 +23,26 @@ public class TileToMatrix {
     private final int empty = StrategyWslF.empty;
     private final int wall = StrategyWslF.wall;
 
-    public TileToMatrix(World world, Game game, Move move, Car car) {
-        init(world, game, move, car, (int) (game.getTrackTileSize() + 0.1), (int) (game.getTrackTileMargin() + 0.1));
+    /**
+     * размеры тайла вытягиваются из констант объекта game
+     *
+     * @param game игровые константы
+     */
+    public TileToMatrix(Game game) {
+        init((int) (game.getTrackTileSize() + 0.1), (int) (game.getTrackTileMargin() + 0.1));
     }
 
-    public TileToMatrix(World world, Game game, Move move, Car car, int tileSize, int tileMargin) {
-        init(world, game, move, car, tileSize, tileMargin);
+    /**
+     * тайл с заданными параметрами
+     *
+     * @param tileSize размер тайла
+     * @param tileMargin размер "закругления"
+     */
+    public TileToMatrix(int tileSize, int tileMargin) {
+        init(tileSize, tileMargin);
     }
 
-    private void init(World world, Game game, Move move, Car car, int tileSize, int tileMargin) {
-        this.world = world;
-        this.game = game;
-        this.move = move;
-        this.car = car;
+    private void init(int tileSize, int tileMargin) {
         this.tileSize = tileSize;
         this.tileMargin = tileMargin;;
         ans = new int[tileSize][tileSize];
