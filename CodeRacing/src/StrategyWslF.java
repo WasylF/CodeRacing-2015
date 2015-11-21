@@ -624,7 +624,7 @@ public abstract class StrategyWslF {
     protected void calculatingNextTilesForAllPositions(int cTileX, int cTileY) {
         int numberOfWayPoints = world.getWaypoints().length;
         int n = 10000;
-        int[][] g = buildWorldGraph(n);
+        int[][] g = buildWorldGraph();
 
         for (int i = 0; i < numberOfWayPoints; i++) {
             int xTN = systemWayPoints[i + 1][0];

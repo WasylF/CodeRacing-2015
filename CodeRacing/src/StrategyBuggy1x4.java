@@ -49,7 +49,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * точка, в направлении которой должен двигаться автомобиль координаты
      * АБСОЛЮТНЫЕ
      */
-    private Point nextWayPoint;
+    private PairIntInt nextWayPoint;
 
     /**
      * метод для инициализациии, вызываемый до начала хода
@@ -97,7 +97,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
 
-        Vector toNextWayPoint = new Vector(nextWayPoint.x - self.getX(), nextWayPoint.y - self.getY());
+        Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         double angleToWaypoint = speed.getAngle(toNextWayPoint);
         //self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
 
@@ -195,7 +195,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (goingDirection == 1 || goBack >= 0.6 * numberOfTickToGoBack) {
             move.setWheelTurn(0);
         } else {
-            Vector toNextWasyPoint = new Vector(nextWayPoint.x - self.getX(), nextWayPoint.y - self.getY());
+            Vector toNextWasyPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
             double angleToWaypoint = curSpeed.getAngle(toNextWasyPoint);
 
             if (goBack >= 0.4 * numberOfTickToGoBack) {
@@ -215,35 +215,15 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     @Override
     public void move() {
         System.out.println("Tick №" + world.getTick() + " starts");
+
         initialization();
         if (world.getTick() >= startTick) {
             prepearMove();
             makeMove();
             printDebug();
-            //printWorldMapToFile("WorldMap" + world.getTick() + ".txt");
-        } else {
-            if (world.getTick() == 10) {
-                worldMap = calculateWorldMap(worldTileSize);
-                //printWorldMapToFile("WorldMapNew" + world.getTick() + ".txt");
-            }
-            /*     if (world.getTick() == 100) {
-             allWayPoints = new int[1000][2];
-             calculateAllWayPoints();
-             curPositionInAllPoints = 0;
-             }
-             */
-            if (world.getTick() == 100) {
-                for (int x = worldWidth-1; x >= 0; x--) {
-                    for (int y = worldHeight-1; y >= 0; y--) {
-                        if (mapTiles[x][y] != TileType.EMPTY) {
-                            getNextTilesFor(x, y);
-                        }
-                    }
-                }
-            }
-        }
-
+        } 
         finalizeMove();
+
         System.out.println("Tick №" + world.getTick() + " ends");
     }
 
@@ -399,333 +379,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return k * worldTileSize + t;
     }
 
-    /**
-     *
-     * @return точка в направлении которой машина будет двигаться
-     */
-    private Point getNextWayPoint() {
-        /*        int nextTileX = self.getNextWaypointX();
-         int nextTileY = self.getNextWaypointY();
-         Point nextPoint = getNextWayPoint(nextTileX, nextTileY);
-         while (nextPoint.equals(new Point(-1, -1))) {
-         int[][] tWayPoints = world.getWaypoints();
-         int[][] systemWayPoints = new int[tWayPoints.length + 1][2];
-         System.arraycopy(tWayPoints, 0, systemWayPoints, 0, tWayPoints.length);
-         systemWayPoints[tWayPoints.length] = systemWayPoints[0];
-         int k = 0;
-         while (systemWayPoints[k][0] != nextTileX || systemWayPoints[k][1] != nextTileY) {
-         k++;
-         }
-         nextTileX = systemWayPoints[k + 1][0];
-         nextTileY = systemWayPoints[k + 1][1];
-         nextPoint = getNextWayPoint(nextTileX, nextTileY);
-         }
-         return nextPoint;*/
-        int curTileX = (int) (self.getX() / game.getTrackTileSize());
-        int curTileY = (int) (self.getY() / game.getTrackTileSize());
-        PairIntInt nextTile = getNextTile(curTileX, curTileY);
-
-        final double koef = 0.35;
-        double nextWaypointX = (nextTile.first + 0.5D) * tileSize;
-        double nextWaypointY = (nextTile.second + 0.5D) * tileSize;
-
-        double curX = getNotToCloseToWall(selfX);
-        double curY = getNotToCloseToWall(selfY);
-
-        double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
-        switch (mapTiles[nextTile.first][nextTile.second]) {
-            case LEFT_TOP_CORNER:
-                nextWaypointX += cornerTileOffset;
-                nextWaypointY += cornerTileOffset;
-                break;
-            case RIGHT_TOP_CORNER:
-                nextWaypointX -= cornerTileOffset;
-                nextWaypointY += cornerTileOffset;
-                break;
-            case LEFT_BOTTOM_CORNER:
-                nextWaypointX += cornerTileOffset;
-                nextWaypointY -= cornerTileOffset;
-                break;
-            case RIGHT_BOTTOM_CORNER:
-                nextWaypointX -= cornerTileOffset;
-                nextWaypointY -= cornerTileOffset;
-                break;
-            case VERTICAL:
-                nextWaypointX = nextWaypointX - 0.5 * tileSize + curX + koef * (tileSize / 2 - selfX);
-                break;
-            case HORIZONTAL:
-                nextWaypointY = nextWaypointY - 0.5 * tileSize + curY + koef * (tileSize / 2 - selfY);
-                break;
-            default:
-        }
-
-        return new Point(nextWaypointX, nextWaypointY);
-
-    }
-
-    private Point getNextWayPoint(int nextTileX, int nextTileY) {
-        int nextWaypointX = nextTileX * worldTileSize;
-        int nextWaypointY = nextTileY * worldTileSize;
-        Point nextWaypoint = new Point(nextWaypointX, nextWaypointY);
-
-        int[][] map = getCopyWorldMap();
-        int carWorldX = convertToWorldCordinate(self.getX());
-        int carWorldY = convertToWorldCordinate(self.getY());
-//        setWorldMap(carWorldX, carWorldY, 1);
-
-        {
-            final int n = 10000;
-            final int destination = -1000;
-
-            Queue<Integer> queue = new LinkedList<>();
-            Queue<Integer> qBack = new LinkedList<>();
-
-            calculateStartPointsForBFS(queue, carWorldX, carWorldY, n);
-            setFinalPointForBFS(nextTileX, nextTileY, destination);
-
-            int distance;
-            distance = ForwardBFS_ForNextWayPoint(queue, qBack, n, destination);
-
-            LinkedList<Integer> possibleNext;
-            if (distance < carHeight * 2 * worldTileSize / tileSize) {
-                worldMap = map;
-                return new Point(-1, -1);
-            }
-            possibleNext = BackwordBFS_ForNextWayPoint(qBack, n, distance);
-
-            if (!possibleNext.isEmpty()) {
-                nextWaypoint = getBestNextWaypoint(possibleNext, carWorldX, carWorldY, n);
-            }
-        }
-
-        worldMap = map;
-
-        nextWaypointX = (int) convertToAbsoluteCordinate(nextWaypoint.x);
-        nextWaypointY = (int) convertToAbsoluteCordinate(nextWaypoint.y);
-
-        nextWaypointX = (int) getNotToCloseToWall(nextWaypointX);
-        nextWaypointY = (int) getNotToCloseToWall(nextWaypointY);
-
-        return new Point(nextWaypointX, nextWaypointY);
-
-    }
-
-    /**
-     * выбирает лучшею следующую ключевую точку по признаку минимального угла
-     * между скоростю и направление до точки
-     *
-     * @param possibleNext множество точек среди которых ищем оптимальную
-     * @param carWorldX абсцисса центра авто
-     * @param carWorldY ордината центра авто
-     * @param n множитель для обработки пары чисел в формате first*n+second
-     * @return
-     */
-    private Point getBestNextWaypoint(LinkedList<Integer> possibleNext, int carWorldX, int carWorldY, int n) {
-        Point nextWPoint = new Point();
-        Vector direction = new Vector(curSpeed);
-        if (direction.module() == 0) {
-            direction.getVectorByAngle(self.getAngle());
-        }
-
-        double minAngle = PI;
-        for (int cur : possibleNext) {
-            int x = (int) getNotToCloseToWorldMapWall(cur / n);
-            int y = (int) getNotToCloseToWorldMapWall(cur % n);
-            double angle = direction.getPositiveAngle(new Vector(x - carWorldX, y - carWorldY));
-            if (angle < minAngle) {
-                minAngle = angle;
-                nextWPoint.x = x;
-                nextWPoint.y = y;
-            }
-        }
-
-        return nextWPoint;
-    }
-
-    /**
-     * поиска в ширину с целью нахождения следующей ключевой точки пути и
-     * расстояния до следующей системной целевой точки
-     *
-     * @param queue очередь, содержащая стартовые точки
-     * @param qBack очередь точек соседних с финальными
-     * @param n множитель для обработки пары чисел в формате first*n+second
-     * @param destination метка финальной точки
-     * @return расстояния до следующей системной целевой точки
-     */
-    private int ForwardBFS_ForNextWayPoint(Queue<Integer> queue, Queue<Integer> qBack,
-            int n, final int destination) {
-        int x, y, cur;
-        int distance = 2_000_000_000;
-
-        while (!queue.isEmpty()) {
-            cur = queue.poll();
-            x = cur / n;
-            y = cur % n;
-            cur = getWorldMap(x, y);
-            if (cur > distance) {
-                continue;
-            }
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (abs(i + j) == 1) {
-                        int tmp = getWorldMap(x + i, y + j);
-                        if (tmp == empty) {
-                            setWorldMap(x + i, y + j, cur + 1);
-                            queue.add((x + i) * n + (y + j));
-                        }
-                        if (tmp == destination) {
-                            setWorldMap(x, y, 2 * cur);
-                            qBack.add(x * n + y);
-                            //qBack.add(new PointAnglePrev(x, y, 0, new Point()));
-                            if (cur < distance) {
-                                distance = cur;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return distance;
-    }
-
-    /**
-     * обратный поиск в ширину для нахождения следующей ключевой точки пути
-     *
-     * @param qBack очередь достигнутых точек соседних с финальными
-     * @param n множитель для обработки пары чисел в формате first*n+second
-     * @param distance расстояние на котором ищем следующую ключевую точку
-     * @return множество точек на расстоянии distance
-     */
-    private LinkedList<Integer> BackwordBFS_ForNextWayPoint(Queue<Integer> qBack,
-            int n, int distance) {
-        LinkedList<Integer> ans = new LinkedList<>();
-
-        int x, y, cur;
-        while (!qBack.isEmpty()) {
-            cur = qBack.poll();
-            x = cur / n;
-            y = cur % n;
-            cur = getWorldMap(x, y) / 2;
-            setWorldMap(x, y, empty);
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (getWorldMap(x + i, y + j) == cur - 1) {
-                        qBack.add((x + i) * n + (y + j));
-                        setWorldMap(x + i, y + j, (cur - 1) * 2);
-                        if (cur - 1 == distance) {
-                            ans.add((x + i) * n + (y + j));
-                        }
-                        //qBack.add(new PointAnglePrev(x + i, y + j,));
-                    }
-                }
-            }
-        }
-        return ans;
-    }
-
-    /**
-     * назначаем крайние точки следующего ключевого тайла финальными точками для
-     * поиска в ширину с целью найти следующую ключевую точку пути
-     *
-     * @param nextWaypointX текущая абсцисса ключевой точки
-     * @param nextWaypointY текущая ордината ключевой точки
-     * @param destination метка для обозначения финальной точки
-     */
-    private void setFinalPointForBFS(int nextTileX, int nextTileY, int destination) {
-        int nextWaypointX = nextTileX * worldTileSize;
-        int nextWaypointY = nextTileY * worldTileSize;
-
-        int delta = worldMarginSize + (carWidth * worldTileSize / tileSize) / 2;
-        switch (mapTiles[nextTileX][nextTileY]) {
-            /*case HORIZONTAL:
-             case VERTICAL:
-             for (int i = 0; i < worldTileSize; i++) {
-             if (getWorldMap(nextWaypointX, nextWaypointY + i) != wall) {
-             setWorldMap(nextWaypointX, nextWaypointY + i, destination);
-             }
-             if (getWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i) != wall) {
-             setWorldMap(nextWaypointX + worldTileSize - 1, nextWaypointY + i, destination);
-             }
-             if (getWorldMap(nextWaypointX + i, nextWaypointY) != wall) {
-             setWorldMap(nextWaypointX + i, nextWaypointY, destination);
-             }
-             if (getWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1) != wall) {
-             setWorldMap(nextWaypointX + i, nextWaypointY + worldTileSize - 1, destination);
-             }
-             }
-             break;*/
-            case LEFT_TOP_CORNER:
-                setWorldMap(nextWaypointX + worldTileSize - delta,
-                        nextWaypointY + worldTileSize - delta, destination);
-                break;
-            case RIGHT_TOP_CORNER:
-                setWorldMap(nextWaypointX + delta,
-                        nextWaypointY + worldTileSize - delta, destination);
-                break;
-            default:
-                setWorldMap(nextWaypointX + worldTileSize / 2, nextWaypointY + worldTileSize / 2, destination);
-        }
-
-    }
-
-    /**
-     * вычисления начальных точек для поиска в ширину с целью нахождения
-     * следующей ключевой точки пути
-     *
-     * @param queue очередь, в которую данные точки будут добавленны
-     * @param carWorldX относительная абсцисса центра машины
-     * @param carWorldY относительная ордината центра машины
-     * @param n множитель для заненсения пары чисел в очередь в формате
-     * first*n+second
-     */
-    void calculateStartPointsForBFS(Queue<Integer> queue, int carWorldX, int carWorldY, int n) {
-        Vector speed = new Vector(curSpeed);
-        if (speed.module() == 0) {
-            speed.getVectorByAngle(self.getAngle());
-        }
-        speed.normalize();
-        speed.mult(carHeight * worldTileSize / tileSize);
-        int x, y, cur;
-
-        x = carWorldX + (int) (speed.x);
-        y = carWorldY + (int) (speed.y);
-        while (getWorldMap(x, y) != empty && getWorldMap(x, y) != selfCar) {
-            speed.mult(0.9);
-            x = carWorldX + (int) (speed.x);
-            y = carWorldY + (int) (speed.y);
-        }
-        setWorldMap(x, y, 1);
-        cur = x * n + y;
-        queue.add(cur);
-        /*Vector v = new Vector(speed);
-         double window = PI / 6;
-         v.rotateVector(-window);
-         final double delta = PI / 180;
-         for (int i = (int) (2 * window / delta); i >= 0; i--) {
-         x = carWorldX + (int) (v.x);
-         y = carWorldY + (int) (v.y);
-         if (getWorldMap(x, y) == empty) {
-         setWorldMap(x, y, 1);
-         cur = x * n + y;
-         queue.add(cur);
-         }
-         v.rotateVector(delta);
-         }
-
-         v.SetEqual(speed);
-         window = PI / 90;
-         for (int i = (int) (2 * window / delta); i >= 0; i--) {
-         x = carWorldX + (int) (v.x);
-         y = carWorldY + (int) (v.y);
-         if (getWorldMap(x, y) == empty) {
-         setWorldMap(x, y, 1);
-         cur = x * n + y;
-         queue.add(cur);
-         }
-         v.rotateVector(delta);
-         }*/
-    }
 
     /**
      * находим расстояние от центра машины до ближайшей стены
@@ -968,6 +621,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
             System.out.println(ex.getMessage());
         }
+    }
+
+    private PairIntInt getNextWayPoint() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }
