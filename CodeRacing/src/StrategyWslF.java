@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.StrictMath.abs;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import model.Car;
 import model.Game;
@@ -124,6 +125,10 @@ public abstract class StrategyWslF {
      */
     protected int worldHeight;
     /**
+     * максимум среди ширины и высоты карты
+     */
+    protected int worldHW;
+    /**
      * список номеров тайлов в порядке обхода, повторенные трижды. Каждый тайл
      * задаётся массивом длины 2, где элемент с индексом {@code 0} содержит
      * позицию X, а элемент с индексом {@code 1} --- позицию Y. Конвертировать
@@ -184,6 +189,7 @@ public abstract class StrategyWslF {
         mapTiles = world.getTilesXY();
         worldHeight = mapTiles.length;
         worldWidth = mapTiles[0].length;
+        worldHW = Math.max(worldHeight, worldWidth) + 1;
         //carWidth = 140;//(int) (self.getWidth() + 0.1);
         //carHeight = 210;//(int) (self.getHeight() + 0.1);
 
@@ -223,6 +229,9 @@ public abstract class StrategyWslF {
 
     /**
      * строит карту всей трассы
+     *
+     * @param wTileSize размер стороны тайла на матрице
+     * @return карту трассы
      */
     protected int[][] calculateWorldMap(int wTileSize) {
         int[][] wMap = new int[worldWidth * wTileSize][worldHeight * wTileSize];
@@ -580,8 +589,8 @@ public abstract class StrategyWslF {
             int yTN = systemWayPoints[i + 1][1];
 
             int destination = 2_000_000_000;
-            int x = (int) ((xT + 0.5) * smallWorldTile);
-            int y = (int) ((yT + 0.5) * smallWorldTile);
+            int x = (int) ((cTileX + 0.5) * smallWorldTile);
+            int y = (int) ((cTileY + 0.5) * smallWorldTile);
             sWorld[y][x] = 1;
             sWorld[(int) ((yTN + 0.5) * smallWorldTile)][(int) ((xTN + 0.5) * smallWorldTile)] = destination;
 
@@ -594,7 +603,7 @@ public abstract class StrategyWslF {
                 qBack.poll();
             }
             LinkedList<Integer> list = BackwordBFS_ForAllWayPoints(qBack, n, sWorld, smallWorldTile);
-            if (list.getLast() == xT * n + yT) {
+            if (list.getLast() == cTileX * n + cTileY) {
                 list.pollLast();
             }
             {
@@ -606,4 +615,157 @@ public abstract class StrategyWslF {
         }
     }
 
+    /**
+     * вычисление следующих тайлов (массив nextTile[cTileX][cTileY])
+     *
+     * @param cTileX абсцисса текущего тайла
+     * @param cTileY ордината текущего тайла
+     */
+    protected void calculatingNextTilesForAllPositions(int cTileX, int cTileY) {
+        int numberOfWayPoints = world.getWaypoints().length;
+        int n = 10000;
+        int[][] g = buildWorldGraph(n);
+
+        for (int i = 0; i < numberOfWayPoints; i++) {
+            int xTN = systemWayPoints[i + 1][0];
+            int yTN = systemWayPoints[i + 1][1];
+
+        }
+    }
+
+    /**
+     * построение графа карты номер вершини : v= n*x+y
+     *
+     * @return граф
+     */
+    protected int[][] buildWorldGraph() {
+        int[][] g = new int[worldHeight * worldWidth][];
+        for (int x = 0; x < worldWidth; x++) {
+            for (int y = 0; y < worldHeight; y++) {
+                int cur = x * worldHW + y;
+                LinkedList<Integer> list = new LinkedList<>();
+                switch (mapTiles[x][y]) {
+                    case VERTICAL:
+                        addUp(x, y, list);
+                        addDown(x, y, list);
+                        break;
+                    case HORIZONTAL:
+                        addLeft(x, y, list);
+                        addRight(x, y, list);
+                        break;
+                    case LEFT_TOP_CORNER:
+                        addRight(x, y, list);
+                        addDown(x, y, list);
+                        break;
+                    case LEFT_BOTTOM_CORNER:
+                        addRight(x, y, list);
+                        addUp(x, y, list);
+                        break;
+                    case RIGHT_TOP_CORNER:
+                        addLeft(x, y, list);
+                        addDown(x, y, list);
+                        break;
+                    case RIGHT_BOTTOM_CORNER:
+                        addLeft(x, y, list);
+                        addUp(x, y, list);
+                        break;
+                    case LEFT_HEADED_T:
+                        addUp(x, y, list);
+                        addLeft(x, y, list);
+                        addDown(x, y, list);
+                        break;
+                    case RIGHT_HEADED_T:
+                        addDown(x, y, list);
+                        addUp(x, y, list);
+                        addRight(x, y, list);
+                        break;
+                    case TOP_HEADED_T:
+                        addLeft(x, y, list);
+                        addUp(x, y, list);
+                        addRight(x, y, list);
+                        break;
+                    case BOTTOM_HEADED_T:
+                        addDown(x, y, list);
+                        addLeft(x, y, list);
+                        addRight(x, y, list);
+                        break;
+                    case CROSSROADS:
+                        addDown(x, y, list);
+                        addLeft(x, y, list);
+                        addUp(x, y, list);
+                        addRight(x, y, list);
+                        break;
+                    default:
+                        continue;
+                }
+                g[cur] = new int[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    g[cur][i] = list.poll();
+                }
+            }
+        }
+
+        return g;
+    }
+
+    protected void addLeft(int x, int y, List<Integer> list) {
+        if (x - 1 >= 0) {
+            list.add((x - 1) * worldHW + y);
+        }
+    }
+
+    protected void addRight(int x, int y, List<Integer> list) {
+        if (x + 1 < worldWidth) {
+            list.add((x + 1) * worldHW + y);
+        }
+    }
+
+    protected void addUp(int x, int y, List<Integer> list) {
+        if (y >= 1) {
+            list.add(x * worldHW + y - 1);
+        }
+    }
+
+    protected void addDown(int x, int y, List<Integer> list) {
+        if (y + 1 < worldHeight) {
+            list.add(x * worldHW + y + 1);
+        }
+    }
+
+    protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY, int[][] g) {
+        int start = sTileX * worldHW + sTileY;
+        int finish = fTileX * worldHW + fTileY;
+        double[] dist = new double[g.length];
+        int[] comeFrom = new int[g.length];
+        for (int i = g.length - 1; i >= 0; i--) {
+            dist[i] = worldHW * worldHW * 10;
+            comeFrom[i] = -1;
+        }
+        Queue<Integer> q = new LinkedList<>();
+        q.add(start);
+        dist[start] = 0;
+        while (!q.isEmpty()) {
+            int current = q.poll();
+            int cX = current / worldHW;
+            int cY = current % worldHW;
+            double add = 1;
+            if (mapTiles[cX][cY] != TileType.VERTICAL && mapTiles[cX][cY] != TileType.HORIZONTAL) {
+                add += 0.3;
+            }
+
+            for (int v : g[current]) {
+                if (Math.abs(dist[v] - (dist[current] + add)) > 1e-1) {
+                    dist[v] = dist[current] + add;
+                    comeFrom[v] = current;
+                    q.add(v);
+                }
+            }
+        }
+
+        PairIntInt pii = new PairIntInt(sTileX, sTileY);
+        if (comeFrom[finish] != -1) {
+            pii = new PairIntInt(comeFrom[finish] / worldHW, comeFrom[finish] % worldHW);
+        }
+        return pii;
+    }
 }
