@@ -23,6 +23,11 @@ public class Vector extends Point {
         getVectorByAngle(angle);
     }
 
+    public Vector(Point begin, Point end) {
+        x = end.x - begin.x;
+        y = end.y - begin.y;
+    }
+
     public Vector(double x, double y) {
         this.x = x;
         this.y = y;
@@ -138,6 +143,7 @@ public class Vector extends Point {
 
     /**
      * rotate this vector by clockwise on angle phi
+     *
      * @param phi angle
      */
     public void rotateVector(double phi) {
