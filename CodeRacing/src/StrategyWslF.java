@@ -293,7 +293,7 @@ public abstract class StrategyWslF {
             list.add(pii);
             finish = comeFrom[finish];
         }
-        list.add(new PairIntInt(start / worldHW, start / worldHW));
+        list.add(new PairIntInt(start / worldHW, start % worldHW));
         return list;
     }
 

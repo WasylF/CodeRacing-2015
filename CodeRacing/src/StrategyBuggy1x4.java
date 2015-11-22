@@ -255,7 +255,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return;
         }
 
-        if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)) {
+        if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)
+                && abs(angleToWaypoint) > PI / 36) {
             // если проехали больше половины тайла
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
                     && signum(self.getSpeedY()) * (relativeY - tileSize / 2) > 0) {
@@ -274,15 +275,16 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
-     * будем ли поварачивать на тайле
+     * будем ли поварачивать на тайле, при условии, что с нашего текущего
+     * положения можно добраться до (tileX,tileY) без поворотов
      *
      * @param tileX
      * @param tileY
      * @return тру, если будем
      */
     private boolean willTurn(int tileX, int tileY) {
-        if (mapTiles[tileX][tileY] != TileType.HORIZONTAL
-                || mapTiles[tileX][tileY] != TileType.VERTICAL) {
+        if (mapTiles[tileX][tileY] == TileType.HORIZONTAL
+                || mapTiles[tileX][tileY] == TileType.VERTICAL) {
             return false;
         }
 
@@ -290,7 +292,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return true;
         }
         PairIntInt nextNextTile = wayToNextKeyPoint.get(1);
-        return !(nextNextTile.first == tileX || nextNextTile.second == tileY);
+        return !(nextNextTile.first == curTileX || nextNextTile.second == curTileY);
     }
 
     /**
@@ -301,7 +303,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setThrowProjectile(true);
             move.setSpillOil(true);
         }
-        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05) {
+        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05
+                && !move.isBrake()) {
             move.setUseNitro(true);
         }
         if (world.getTick() == startTick) {
