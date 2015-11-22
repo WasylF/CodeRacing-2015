@@ -34,6 +34,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * АБСОЛЮТНЫЕ
      */
     private PairIntInt nextWayPoint;
+    /**
+     * координаты тайла, в который сейчас едет автомобиль
+     */
+    private PairIntInt nextTile;
 
     /**
      * метод для инициализациии, вызываемый до начала хода
@@ -241,11 +245,29 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setBrake(true);
             return;
         }
+        Vector carDirection = new Vector(self.getAngle());
+        Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
+        angleToWaypoint = carDirection.getAngle(toNextWayPoint);
+
         if (abs(angleToWaypoint) > PI / 8
-                && speed.length() * speed.length() * abs(angleToWaypoint) > 2.5D * 2.5D * PI) {
+                && abs(angleToWaypoint) * speed.length() * speed.length() > 2.5D * 2.5D * PI) {
             move.setBrake(true);
+            return;
         }
 
+        if (mapTiles[nextTile.first][nextTile.second] != TileType.HORIZONTAL
+                && mapTiles[nextTile.first][nextTile.second] != TileType.VERTICAL) {
+            // если проехали больше половины тайла
+            if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
+                    && signum(self.getSpeedY()) * (relativeY - tileSize / 2) > 0) {
+                move.setBrake(true);
+            }
+
+            if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL
+                    && signum(self.getSpeedX()) * (relativeX - tileSize / 2) > 0) {
+                move.setBrake(true);
+            }
+        }
     }
 
     /**
@@ -270,7 +292,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return АБСОЛЮТНЫЕ координаты точки
      */
     private PairIntInt getNextWayPoint() {
-        PairIntInt nextTile = getNextTile();
+        nextTile = getNextTile();
         //устанавливаем точку - середину следующего тайла
         PairIntInt nextPoint = new PairIntInt((int) ((nextTile.first + 0.5) * tileSize),
                 (int) ((nextTile.second + 0.5) * tileSize));
@@ -298,12 +320,16 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 nextPoint.second -= cornerTileOffset;
                 break;
             case VERTICAL:
-                nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
-                        + relativeX + (koef * (tileSize / 2 - relativeX)));
+                if (mapTiles[curTileX][curTileY] == TileType.VERTICAL) {
+                    nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
+                            + relativeX + (koef * (tileSize / 2 - relativeX)));
+                }
                 break;
             case HORIZONTAL:
-                nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
-                        + relativeY + (koef * (tileSize / 2 - relativeY)));
+                if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL) {
+                    nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
+                            + relativeY + (koef * (tileSize / 2 - relativeY)));
+                }
                 break;
             default:
         }
