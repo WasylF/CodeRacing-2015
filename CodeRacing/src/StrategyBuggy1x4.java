@@ -485,6 +485,42 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         PairIntInt nextPoint = new PairIntInt((int) ((nextTile.first + 0.5) * tileSize),
                 (int) ((nextTile.second + 0.5) * tileSize));
 
+        // максимально допустимое смещение машинки от центра тайла
+        double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
+        // коэфициент отклонения от текущий координаты в случае движения вертикально или горизонтально
+        double koef = 0.2;
+        // относительная абсцисса центра авто
+        //int rilativeX= sel
+        // относительная ордината центра авто
+        //int relativeY;
+        switch (mapTiles[nextTile.first][nextTile.second]) {
+            case LEFT_TOP_CORNER:
+                nextPoint.first += cornerTileOffset;
+                nextPoint.second += cornerTileOffset;
+                break;
+            case RIGHT_TOP_CORNER:
+                nextPoint.first -= cornerTileOffset;
+                nextPoint.second += cornerTileOffset;
+                break;
+            case LEFT_BOTTOM_CORNER:
+                nextPoint.first += cornerTileOffset;
+                nextPoint.second -= cornerTileOffset;
+                break;
+            case RIGHT_BOTTOM_CORNER:
+                nextPoint.first -= cornerTileOffset;
+                nextPoint.second -= cornerTileOffset;
+                break;
+            case VERTICAL:
+                nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
+                        + relativeX + (koef * (tileSize / 2 - relativeX)));
+                break;
+            case HORIZONTAL:
+                nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
+                        + relativeY + (koef * (tileSize / 2 - relativeY)));
+                break;
+            default:
+        }
+
         return nextPoint;
     }
 
