@@ -83,7 +83,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         double angleToWaypoint = speed.getAngle(toNextWayPoint);
-        //self.getAngleTo(nextWayPoint.x, nextWayPoint.y);
 
         double wheelTurn = getWheelTurn(angleToWaypoint);
 
@@ -92,7 +91,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         activateIfNeedBreaks(angleToWaypoint, speed);
 
         activateIfNeedAmmo();
-        //int[][] wayPoints= world.getWaypoints();        
     }
 
     /**
@@ -171,12 +169,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 }
             }
         }
-        // если на предыдущем ходу тоже сдавали задний ход
-       /* if (abs(previousMove.getEnginePower() + 1) < 1e-2) {
-         move.setWheelTurn(previousMove.getWheelTurn());
-         } else {
-         move.setWheelTurn(signum(previousMove.getWheelTurn()) * 1);
-         }*/
         if (goingDirection == 1 || goBack >= 0.6 * numberOfTickToGoBack) {
             move.setWheelTurn(0);
         } else {
@@ -217,11 +209,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void printDebug() {
         System.out.println("car center: (" + relativeX + " , " + relativeY + ")   speed: " + curSpeed + "   curEnginePower: " + move.getEnginePower());
-        if (curSpeed.y > 0 && goBack > 0) {
-            for (int i = 0; i < 10; i++) {
-                System.out.println("Speed>0!!!!!!!!!!!      timeDiff: " + (numberOfTickToGoBack - goBack));
-            }
-        }
     }
 
     /**
@@ -241,52 +228,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void calulateEnginePower(double angleToWaypoint, double wheelTurn, Vector speed) {
         move.setEnginePower(0.9);
-        /*        int distanceToWall = getDistanceToWall(PI / 6);
-         int dist2 = getDistanceToWall(PI / 60);
-
-         useBreaks = false;
-         Vector car = new Vector(self.getAngle());
-
-         if (car.getPositiveAngle(speed) > PI / 3) {
-         move.setEnginePower(1.0);
-         return;
-         }
-
-         if (abs(angleToWaypoint) > PI / 4) {
-         move.setEnginePower(0);
-         return;
-         }
-
-         if (distanceToWall > carHeight * 0.5
-         && dist2 > carHeight * 2.5 && abs(angleToWaypoint) < PI / 6) {
-         if (wheelTurn < 0.2) {
-         move.setEnginePower(1.0);
-         } else if (wheelTurn < 0.3) {
-         move.setEnginePower(0.8);
-         } else if (wheelTurn < 0.4) {
-         move.setEnginePower(0.6);
-         } else if (wheelTurn < 0.5) {
-         move.setEnginePower(0.1);
-         } else {
-         useBreaks = true;
-         move.setEnginePower(-0.1);
-         if (wheelTurn > 0.8) {
-         move.setEnginePower(-1);
-         }
-         }
-
-         return;
-         }
-
-         if (distanceToWall > carHeight
-         && dist2 > carHeight
-         * 1.5 && abs(angleToWaypoint)
-         < PI / 9) {
-         move.setEnginePower(0.85);
-         return;
-         }
-
-         move.setEnginePower(0.1);*/
     }
 
     /**
@@ -318,7 +259,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05) {
             move.setUseNitro(true);
         }
-        if (world.getTick() == 182) {
+        if (world.getTick() == startTick) {
             move.setUseNitro(true);
         }
     }
@@ -338,10 +279,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
         // коэфициент отклонения от текущий координаты в случае движения вертикально или горизонтально
         double koef = 0.2;
-        // относительная абсцисса центра авто
-        //int rilativeX= sel
-        // относительная ордината центра авто
-        //int relativeY;
+
         switch (mapTiles[nextTile.first][nextTile.second]) {
             case LEFT_TOP_CORNER:
                 nextPoint.first += cornerTileOffset;
