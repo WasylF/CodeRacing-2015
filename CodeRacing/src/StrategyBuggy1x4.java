@@ -256,7 +256,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
 
         if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)
-                && abs(angleToWaypoint) > PI / 36) {
+                && abs(angleToWaypoint) > PI / 180) {
             // если проехали больше половины тайла
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
                     && signum(self.getSpeedY()) * (relativeY - tileSize / 2) > 0) {

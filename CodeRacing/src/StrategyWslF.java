@@ -199,7 +199,7 @@ public abstract class StrategyWslF {
         worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
         distanceHelper = new DistanceHelper(tileSize, marginSize, worldWidth, worldHeight, worldHW, this, worldGraphHelper, worldMapHelper, tileHelper);
 
-       // worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
+        // worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
     }
 
     protected void initAll(Car self, World world, Game game, Move move) {
@@ -250,17 +250,19 @@ public abstract class StrategyWslF {
      * ходом, то есть мы движемся от следующего ключевого до стартового
      * (текущего)
      *
-     * @param sTileX абсцисса следующего ключевого тайла
-     * @param sTileY ордината следующего ключевого тайла
-     * @param fTileX абсцисса текущего тайла
-     * @param fTileY ордината текущего тайла
+     * @param fTileX абсцисса следующего ключевого тайла
+     * @param fTileY ордината следующего ключевого тайла
+     * @param sTileX абсцисса текущего тайла
+     * @param sTileY ордината текущего тайла
      * @param g граф карты трасы
      * @return следующий тайл для посещения (он соседний с текущим)
      */
-    protected List<PairIntInt> getWayByBFS(int sTileX, int sTileY, int fTileX, int fTileY, int[][] g) {
+    protected List<PairIntInt> getWayByBFS(int fTileX, int fTileY, int sTileX, int sTileY, int[][] g) {
         int start = sTileX * worldHW + sTileY;
         int finish = fTileX * worldHW + fTileY;
         double[] dist = new double[g.length];
+        // direct[v]= 1 => при оптимальном маршруте в тайле с кодом v едем горизонтально
+        boolean[] direct = new boolean[g.length];
         int[] comeFrom = new int[g.length];
         for (int i = g.length - 1; i >= 0; i--) {
             dist[i] = worldHW * worldHW * 10;
@@ -269,31 +271,39 @@ public abstract class StrategyWslF {
         Queue<Integer> q = new LinkedList<>();
         q.add(start);
         dist[start] = 0;
+        direct[start] = Math.abs(self.getSpeedX()) > Math.abs(self.getSpeedY());
         while (!q.isEmpty()) {
             int current = q.poll();
             int cX = current / worldHW;
             int cY = current % worldHW;
-            double add = 1;
-            if (mapTiles[cX][cY] != TileType.VERTICAL && mapTiles[cX][cY] != TileType.HORIZONTAL) {
-                add += 0.3;
-            }
+            double add;
 
             for (int v : g[current]) {
+                add = 1;
+                int vX = v / worldHW;
+                int vY = v % worldHW;
+                boolean isTurn = (direct[current] && cY != vY)
+                        || (!direct[current] && cX != vX);
+                if (isTurn) {
+                    add += 0.5;
+                }
                 if ((dist[current] + add) < dist[v] && Math.abs(dist[v] - (dist[current] + add)) > 1e-1) {
                     dist[v] = dist[current] + add;
                     comeFrom[v] = current;
+                    direct[v] = direct[current] ^ isTurn;
                     q.add(v);
                 }
             }
         }
 
         LinkedList<PairIntInt> list = new LinkedList<>();
+        list.addFirst(new PairIntInt(finish / worldHW, finish % worldHW));
         while (comeFrom[finish] != -1 && comeFrom[finish] != start) {
             PairIntInt pii = new PairIntInt(comeFrom[finish] / worldHW, comeFrom[finish] % worldHW);
-            list.add(pii);
+            list.addFirst(pii);
             finish = comeFrom[finish];
         }
-        list.add(new PairIntInt(start / worldHW, start % worldHW));
+
         return list;
     }
 
