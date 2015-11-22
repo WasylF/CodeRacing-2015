@@ -30,7 +30,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     /**
      * количество тиков в течении которых автомобиль должен сдавать задним ходом
      */
-    private static final int numberOfTickToGoBack = 120;
+    private static final int numberOfTickToGoBack = 80;
     /**
      * точка, в направлении которой должен двигаться автомобиль координаты
      * АБСОЛЮТНЫЕ
@@ -118,6 +118,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                         || (angleToBonus < PI / 15 && self.getDistanceTo(bonus) > tileSize)
                         || (angleToBonus < PI / 10 && bonus.getType() == BonusType.PURE_SCORE)
                         || (angleToBonus < PI / 10 && self.getDurability() < 0.9
+                        && bonus.getType() == BonusType.REPAIR_KIT)
+                        || (angleToBonus < PI / 20 && self.getDurability() < 0.5
                         && bonus.getType() == BonusType.REPAIR_KIT)) {
                     nextWayPoint = bonusCoordinate;
                     return true;
@@ -134,6 +136,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return тру, если нужно
      */
     private boolean shouldGoBack() {
+        if (world.getTick() < startTick * 1.5) {
+            return false;
+        }
         Vector opCarDirect = new Vector(carDirection);
         opCarDirect.rotateVector(PI);
         //если уперлись задом в стенку, то нужно ехать вперед
@@ -142,13 +147,20 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return false;
         }
 
-        int dist = distanceHelper.getDistanceToWallByCarDirection(PI / 180);
-        if (dist > tileSize / 2 && goBack > 0) {
-            goBack = 0;
-            return false;
-        }
         if (goBack > 0) {
-            return true;
+            int dist = distanceHelper.getDistanceToWallByCarDirection(PI / 180);
+            if (dist < tileSize / 2) {
+                return true;
+            }
+        }
+
+        Car[] cars = getOpCars();
+        for (Car car : cars) {
+            if (self.getDistanceTo(car) < carHeight * 1.5 && abs(self.getAngleTo(car)) < PI / 4
+                    && curSpeed.length() < 1) {
+                goBack = numberOfTickToGoBack;
+                return true;
+            }
         }
 
         if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-1 && previousSpeed.length() < 1e-1) {
@@ -195,7 +207,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         } else {
             // если скорость направленна в сторону капота
             if (goingDirection == 1 || curSpeed.module() < 2) {
-                goBack *= 1.5;
+                goBack = (int) (max(goBack, 20) * 1.5);
             } else {
                 if (curSpeed.module() > 2) {
                     move.setBrake(true);
@@ -334,23 +346,24 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * активирует расходники, если нужно
      */
     private void activateIfNeedAmmo() {
-        Car[] cars = world.getCars();
+        Car[] cars = getOpCars();
         if (world.getTick() > 1.5 * startTick) {
             for (Car car : cars) {
-                if (hypot(car.getX() - self.getX(), car.getY() - self.getY()) > carWidth) {
-                    double angle = abs(self.getAngleTo(car));
-                    int distToCar = (int) self.getDistanceTo(car);
-                    if (angle < PI / 72 && distToCar < 3 * tileSize) {
-                        move.setThrowProjectile(true);
-                    }
-                    if (angle > 3 * PI / 4 && distToCar < tileSize) {
-                        move.setSpillOil(true);
-                    }
+                double angle = abs(self.getAngleTo(car));
+                int distToCar = (int) self.getDistanceTo(car);
+                if (angle < PI / 100 && distToCar < 2.5 * tileSize) {
+                    move.setThrowProjectile(true);
+                }
+                if (angle > 3 * PI / 4 && distToCar < tileSize) {
+                    move.setSpillOil(true);
                 }
             }
         }
-        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05
-                && !move.isBrake()) {
+        if (move.isBrake()) {
+            move.setUseNitro(false);
+            return;
+        }
+        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.01) {
             move.setUseNitro(true);
         }
         if (world.getTick() == startTick) {
@@ -359,14 +372,16 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         int straightCountX = 0;
         int straightCountY = 0;
         for (PairIntInt tile : wayToNextKeyPoint) {
-            if (tile.first == nextTile.first) {
+            if (tile.first == curTile.first) {
                 straightCountX++;
             }
-            if (tile.second == nextTile.second) {
+            if (tile.second == curTile.second) {
                 straightCountY++;
             }
         }
-        if (max(straightCountX, straightCountY) > 5) {
+        Vector speed = new Vector(curSpeed);
+        speed.normalize();
+        if (max(straightCountX, straightCountY) > 5 && (abs(speed.x) < 0.1 || abs(speed.y) < 0.1)) {
             move.setUseNitro(true);
         }
     }
@@ -408,14 +423,30 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                         nextTileType = TileType.HORIZONTAL;
                         break;
                     }
-                    if (nnTile.first < curTile.first) {
-                        nextTileType = nnTile.second < curTile.second ? TileType.LEFT_BOTTOM_CORNER : TileType.RIGHT_BOTTOM_CORNER;
+                    if (nextTile.first == curTile.first + 1) {
+                        nextTileType = nnTile.second > curTile.second ? TileType.RIGHT_TOP_CORNER : TileType.RIGHT_BOTTOM_CORNER;
                         break;
                     }
-                    if (nnTile.first > curTile.first) {
-                        nextTileType = nnTile.second < curTile.second ? TileType.LEFT_TOP_CORNER : TileType.RIGHT_TOP_CORNER;
+                    if (nextTile.first == curTile.first - 1) {
+                        nextTileType = nnTile.second > curTile.second ? TileType.LEFT_TOP_CORNER : TileType.LEFT_BOTTOM_CORNER;
                         break;
                     }
+                    if (nextTile.second == curTile.second + 1) {
+                        nextTileType = nnTile.first > curTile.first ? TileType.LEFT_BOTTOM_CORNER : TileType.RIGHT_BOTTOM_CORNER;
+                        break;
+                    }
+                    if (nextTile.second == curTile.second - 1) {
+                        nextTileType = nnTile.first > curTile.first ? TileType.LEFT_TOP_CORNER : TileType.RIGHT_TOP_CORNER;
+                        break;
+                    }
+                    /*if (nnTile.first < curTile.first) {
+                     nextTileType = nnTile.second < curTile.second ? TileType.RIGHT_TOP_CORNER : TileType.RIGHT_BOTTOM_CORNER;
+                     break;
+                     }
+                     if (nnTile.first > curTile.first) {
+                     nextTileType = nnTile.second < curTile.second ? TileType.LEFT_TOP_CORNER : TileType.LEFT_BOTTOM_CORNER;
+                     break;
+                     }*/
                 }
         }
 

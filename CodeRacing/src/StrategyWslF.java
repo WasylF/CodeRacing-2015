@@ -327,7 +327,7 @@ public abstract class StrategyWslF {
         //PairIntInt nextTile =
         List<PairIntInt> way = getWayByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
         PairIntInt ans = way.get(0);
-        if (way.size() < 3) {
+        if (way.size() < 5) {
             List<PairIntInt> addWay
                     = getWayByBFS(systemWayPoints[self.getNextWaypointIndex() + 1].first,
                             systemWayPoints[self.getNextWaypointIndex() + 1].second,
@@ -358,5 +358,20 @@ public abstract class StrategyWslF {
      */
     protected int getTileDistance(PairIntInt tile1, PairIntInt tile2) {
         return Math.abs(tile1.first - tile2.first) + Math.abs(tile1.second - tile2.second);
+    }
+
+    protected Car[] getOpCars() {
+        Car[] cars = world.getCars();
+        LinkedList<Car> list = new LinkedList<>();
+        for (Car car : cars) {
+            if (Math.hypot(car.getX() - self.getX(), car.getY() - self.getY()) > carWidth) {
+                list.add(car);
+            }
+        }
+        cars = new Car[list.size()];
+        for (int i = list.size() - 1; i >= 0; i--) {
+            cars[i] = list.poll();
+        }
+        return cars;
     }
 }
