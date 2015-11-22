@@ -21,25 +21,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private boolean useBreaks;
     /**
-     * скорость на предыдущем ходу
-     */
-    private Vector previousSpeed;
-    /**
-     * скорость на текущем ходу
-     */
-    private Vector curSpeed;
-    /**
      * оставшееся количество тиков, в котороых машина будет ехать задним ходом.
      */
     private int goBack;
-    /**
-     * относительный угол поворота при заднем ходе
-     */
-    private double goBackWheelTurn;
-    /**
-     * копия предыдущего хода
-     */
-    private Move previousMove;
 
     /**
      * количество тиков в течении которых автомобиль должен сдавать задним ходом
@@ -120,7 +104,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         Vector opCarDirect = new Vector(self.getAngle());
         opCarDirect.rotateVector(PI);
         //если уперлись задом в стенку, то нужно ехать вперед
-        if (getDistanceToWall(self, PI / 30, opCarDirect) < 2 * carHeight / 3) {
+        if (distanceHelper.getDistanceToWall(self, PI / 30, opCarDirect) < 2 * carHeight / 3) {
             goBack = 0;
             return false;
         }
@@ -133,7 +117,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             goBack = numberOfTickToGoBack;
             return true;
         }
-        int distToWall = getDistanceToWallByCarDirection(PI / 60);
+        int distToWall = distanceHelper.getDistanceToWallByCarDirection(PI / 60);
 
         if ((abs(distToWall - carHeight / 2) < 20)
                 || (distToWall <= carHeight && curSpeed.module() >= 10)
@@ -340,141 +324,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     /**
-     * отодвигает АБСОЛЮТНУЮ координату от стены, если расстояние до стены 2/3
-     * ширины корпуса
-     *
-     * @param t координата
-     * @return пересчитаная (если нужно) координата
-     */
-    private double getNotToCloseToWall(double t) {
-        int k = (int) t / tileSize;
-        t = (int) t % tileSize;
-        if (t < marginSize + 2 * carWidth / 3) {
-            t = marginSize + 2 * carWidth / 3;
-        }
-        if (t > tileSize - marginSize - 2 * carWidth / 3) {
-            t = tileSize - (marginSize + 2 * carWidth / 3);
-        }
-        return k * tileSize + t;
-    }
-
-    /**
-     * в случае надобности отодвигает координату от стены
-     *
-     * @param t АБСОЛЮТНАЯ координата для матрици worldMap
-     * @return АБСОЛЮТНАЯ координата, отодвинутая от стены, если нужно
-     */
-    private double getNotToCloseToWorldMapWall(double t) {
-        //пересчитать относительную координату
-        int k = (int) t / worldTileSize;
-        t = (int) t % worldTileSize;
-
-        double delta = carWidth / 2;
-        delta = delta * worldTileSize / tileSize;
-        if (t < worldMarginSize + delta) {
-            t = worldMarginSize + delta;
-        }
-        if (t > worldTileSize - worldMarginSize - delta) {
-            t = worldTileSize - (worldMarginSize + delta);
-        }
-        return k * worldTileSize + t;
-    }
-
-    /**
-     * находим расстояние от центра машины до ближайшей стены
-     *
-     * @param car машина
-     * @param deltaAngle угол отклонения от вектора скорости
-     * @param directionVector направление в котором ищем стену (равняется
-     * вектору скорости или вектору направления авто)
-     * @return расстояние до стены
-     */
-    private int getDistanceToWall(Car car, double deltaAngle, Vector directionVector) {
-        int carColor = getColorOfCar(car);
-        int carX = (int) getRelativeCoordinate(car.getX());
-        int carY = (int) getRelativeCoordinate(car.getY());
-        if (directionVector.length() < 1e-1) {
-            return tileSize;
-        }
-        directionVector.normalize();
-        while (max(abs(directionVector.x), abs(directionVector.y)) <= 1) {
-            directionVector.x *= 1.001;
-            directionVector.y *= 1.001;
-        }
-        final int numberOfTurns = 40;
-        double turnAngle;
-
-        for (int d = 1; d <= tileSize; d++) {
-            Vector vector = new Vector(directionVector);
-            vector.rotateVector(-deltaAngle);
-
-            turnAngle = 2 * deltaAngle / numberOfTurns;
-            for (int i = 0; i <= numberOfTurns; i++) {
-                int x = (int) (carX + d * vector.x);
-                int y = (int) (carY + d * vector.y);
-                if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
-                    x = getAccurateCoordinate(x);
-                    y = getAccurateCoordinate(y);
-                    if (tileHelper.getCurTile(x, y) == carColor
-                            || tileHelper.getCurTile(x, y) == empty) {
-                        return tileSize;
-                    } else {
-                        return d;
-                    }
-                }
-
-                if (tileHelper.getCurTile(x, y) == wall) {
-                    return d;
-                }
-                vector.rotateVector(turnAngle);
-            }
-            if (deltaAngle > PI / 30) {
-                deltaAngle -= turnAngle / 50;
-            }
-        }
-        return tileSize;
-    }
-
-    /**
-     * находим расстояние от центра собственной машины до ближайшей стены за
-     * направление поиска берем вектор СКОРОСТИ авто
-     *
-     * @param deltaAngle угол отклонения от вектора скорости
-     * @return расстояние до стены
-     */
-    private int getDistanceToWallBySpeed(double deltaAngle) {
-        Vector direvtionVector = new Vector(curSpeed);
-        if (direvtionVector.module() == 0) {
-            direvtionVector.getVectorByAngle(self.getAngle());
-        }
-        return getDistanceToWall(self, deltaAngle, direvtionVector);
-    }
-
-    /**
-     * находим расстояние от центра собственной машины до ближайшей стены за
-     * направление поиска берем вектор НАПРАВЛЕНИЯ авто
-     *
-     * @param deltaAngle угол отклонения от вектора скорости
-     * @return расстояние до стены
-     */
-    private int getDistanceToWallByCarDirection(double deltaAngle) {
-        Vector direvtionVector = new Vector(self.getAngle());
-        return getDistanceToWall(self, deltaAngle, direvtionVector);
-    }
-
-    /**
-     * возвращает корректную координату, то есть от 0 до tileSize-1
-     *
-     * @param t входная координата
-     * @return подкорректированная
-     */
-    private int getAccurateCoordinate(double t) {
-        t = max(t, 0);
-        t = min(t, tileSize - 1);
-        return (int) t;
-    }
-
-    /**
      * вычесление следующией точки в направлении которой будем двигаться
      *
      * @return АБСОЛЮТНЫЕ координаты точки
@@ -532,16 +381,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         int[][] g = worldGraphHelper.getCopyWorldGraph();
         PairIntInt nextTile = getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
         return nextTile;
-    }
-
-    /**
-     * возвращает относительную карту (для текущего тайла) координату
-     *
-     * @param c абсолютная координата
-     * @return
-     */
-    private double getRelativeCoordinate(double c) {
-        return c - ((int) (c / tileSize)) * tileSize;
     }
 
 }

@@ -138,6 +138,19 @@ public abstract class StrategyWslF {
     protected int[][] curTile;
 
     /**
+     * скорость на предыдущем ходу
+     */
+    protected Vector previousSpeed;
+    /**
+     * скорость на текущем ходу
+     */
+    protected Vector curSpeed;
+    /**
+     * копия предыдущего хода
+     */
+    protected Move previousMove;
+
+    /**
      * объект для операций с матрицей всей карты
      */
     protected WorldMapHelper worldMapHelper;
@@ -149,6 +162,11 @@ public abstract class StrategyWslF {
      * объект для работы с текущим тайлом
      */
     protected TileHelper tileHelper;
+    /**
+     * объект для нахождений расстояний от собственной машины до стен. +++
+     * планируется добавить расстояние до машин опонентов
+     */
+    protected DistanceHelper distanceHelper;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -177,6 +195,7 @@ public abstract class StrategyWslF {
         tileHelper = new TileHelper(self, world, game, move, this);
         worldMapHelper = new WorldMapHelper(worldHeight, worldWidth, self, world, game, move, this);
         worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
+        distanceHelper = new DistanceHelper(tileSize, marginSize, worldWidth, worldHeight, worldHW, this, worldGraphHelper, worldMapHelper, tileHelper);
 
         worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
     }
