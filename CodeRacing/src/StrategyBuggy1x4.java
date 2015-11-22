@@ -335,14 +335,17 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void activateIfNeedAmmo() {
         Car[] cars = world.getCars();
-        for (Car car : cars) {
-            if (car != self) {
-                double angle = abs(self.getAngleTo(car));
-                if (angle < PI / 36) {
-                    move.setThrowProjectile(true);
-                }
-                if (angle > 3 * PI / 4 && self.getDistanceTo(car) < tileSize) {
-                    move.setSpillOil(true);
+        if (world.getTick() > 1.5 * startTick) {
+            for (Car car : cars) {
+                if (hypot(car.getX() - self.getX(), car.getY() - self.getY()) > carWidth) {
+                    double angle = abs(self.getAngleTo(car));
+                    int distToCar = (int) self.getDistanceTo(car);
+                    if (angle < PI / 72 && distToCar < 3 * tileSize) {
+                        move.setThrowProjectile(true);
+                    }
+                    if (angle > 3 * PI / 4 && distToCar < tileSize) {
+                        move.setSpillOil(true);
+                    }
                 }
             }
         }
@@ -356,14 +359,14 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         int straightCountX = 0;
         int straightCountY = 0;
         for (PairIntInt tile : wayToNextKeyPoint) {
-            if (tile.first == nextWayPoint.first) {
+            if (tile.first == nextTile.first) {
                 straightCountX++;
             }
-            if (tile.second == nextWayPoint.second) {
+            if (tile.second == nextTile.second) {
                 straightCountY++;
             }
         }
-        if (max(straightCountX, straightCountY) > 3) {
+        if (max(straightCountX, straightCountY) > 5) {
             move.setUseNitro(true);
         }
     }
@@ -433,18 +436,16 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 nextPoint.first -= cornerTileOffset;
                 nextPoint.second -= cornerTileOffset;
                 break;
-            case VERTICAL:
-                /*if (mapTiles[curTileX][curTileY] == TileType.VERTICAL) */{
-                    nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
-                            + relativeX + (koef * (tileSize / 2 - relativeX)));
-                }
-                break;
-            case HORIZONTAL:
-                /*if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL)*/ {
-                    nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
-                            + relativeY + (koef * (tileSize / 2 - relativeY)));
-                }
-                break;
+            case VERTICAL: /*if (mapTiles[curTileX][curTileY] == TileType.VERTICAL) */ {
+                nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
+                        + relativeX + (koef * (tileSize / 2 - relativeX)));
+            }
+            break;
+            case HORIZONTAL: /*if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL)*/ {
+                nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
+                        + relativeY + (koef * (tileSize / 2 - relativeY)));
+            }
+            break;
             default:
         }
 
