@@ -226,6 +226,18 @@ public abstract class StrategyWslF {
         return copy;
     }
 
+    /**
+     * вычисление тайла, в который будем направляться. Метод работает обратным
+     * ходом, то есть мы движемся от следующего ключевого до стартового
+     * (текущего)
+     *
+     * @param sTileX абсцисса следующего ключевого тайла
+     * @param sTileY ордината следующего ключевого тайла
+     * @param fTileX абсцисса текущего тайла
+     * @param fTileY ордината текущего тайла
+     * @param g граф карты трасы
+     * @return следующий тайл для посещения (он соседний с текущим)
+     */
     protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY, int[][] g) {
         int start = sTileX * worldHW + sTileY;
         int finish = fTileX * worldHW + fTileY;

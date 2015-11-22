@@ -22,14 +22,27 @@ public class WorldGraphHelper {
      * максимум среди ширины и высоты карты
      */
     private final int worldHW;
-
+    /**
+     * граф карты трасы
+     */
+    private final int[][] worldGraph;
+    
     public WorldGraphHelper(StrategyWslF strategy, int worldWidth, int worldHeight, int worldHW) {
         this.strategy = strategy;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
         this.worldHW = worldHW;
+        this.worldGraph= buildWorldGraph();
     }
 
+    /**
+     * 
+     * @return копию графа карты трасы
+     */
+    public int[][] getCopyWorldGraph() {
+        return strategy.get2DArrayCopy(worldGraph);
+    }
+    
     /**
      * построение графа карты номер вершини : v= x*worldHW+y
      *

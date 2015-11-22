@@ -473,19 +473,26 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         return (int) t;
     }
 
+    /**
+     * вычесление следующией точки в направлении которой будем двигаться
+     *
+     * @return АБСОЛЮТНЫЕ координаты точки
+     */
     private PairIntInt getNextWayPoint() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        PairIntInt nextTile = getNextTile();
+        PairIntInt nextPoint = new PairIntInt((int) ((nextTile.first + 0.5) * tileSize),
+                (int) ((nextTile.second + 0.5) * tileSize));
+        return nextPoint;
     }
 
     /**
-     * тайл в который нужно ехать автомобилю
      *
-     * @param curTileX
-     * @param curTileY
-     * @return
+     * @return тайл в который нужно ехать автомобилю
      */
-    protected PairIntInt getNextTile(int curTileX, int curTileY) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    protected PairIntInt getNextTile() {
+        int [][] g= worldGraphHelper.getCopyWorldGraph();
+        PairIntInt nextTile = getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
+        return nextTile;
     }
 
     /**
