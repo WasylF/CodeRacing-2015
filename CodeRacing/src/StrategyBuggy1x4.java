@@ -255,9 +255,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return;
         }
 
-        if (speed.length() > 10
-                && mapTiles[nextTile.first][nextTile.second] != TileType.HORIZONTAL
-                && mapTiles[nextTile.first][nextTile.second] != TileType.VERTICAL) {
+        if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)) {
             // если проехали больше половины тайла
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
                     && signum(self.getSpeedY()) * (relativeY - tileSize / 2) > 0) {
@@ -273,6 +271,26 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 return;
             }
         }
+    }
+
+    /**
+     * будем ли поварачивать на тайле
+     *
+     * @param tileX
+     * @param tileY
+     * @return тру, если будем
+     */
+    private boolean willTurn(int tileX, int tileY) {
+        if (mapTiles[tileX][tileY] != TileType.HORIZONTAL
+                || mapTiles[tileX][tileY] != TileType.VERTICAL) {
+            return false;
+        }
+
+        if (wayToNextKeyPoint.size() < 2) {
+            return true;
+        }
+        PairIntInt nextNextTile = wayToNextKeyPoint.get(1);
+        return !(nextNextTile.first == tileX || nextNextTile.second == tileY);
     }
 
     /**
@@ -347,9 +365,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return тайл в который нужно ехать автомобилю
      */
     protected PairIntInt getNextTile() {
-        int[][] g = worldGraphHelper.getCopyWorldGraph();
-        PairIntInt nextTile = getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
-        return nextTile;
+        return getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY);
     }
 
 }
