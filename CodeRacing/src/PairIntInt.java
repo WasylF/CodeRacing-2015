@@ -18,6 +18,11 @@ public class PairIntInt {
         this.second = second;
     }
 
+    public PairIntInt(double first, double second) {
+        this.first = (int) first;
+        this.second = (int) second;
+    }
+
     @Override
     public String toString() {
         return "( " + first + " , " + second + " )";
