@@ -62,8 +62,8 @@ public class WorldMapHelper {
     StrategyWslF strategy;
 
     public WorldMapHelper(int worldHight, int worldWidth, Car self, World world, Game game, Move move, StrategyWslF strategy) {
-        this.worldWidth = worldHight;
-        this.worldHeight = worldWidth;
+        this.worldWidth = worldWidth;
+        this.worldHeight = worldHight;
         this.strategy = strategy;
         this.tileSize = (int) (game.getTrackTileSize() + 0.1);
     }
@@ -75,32 +75,19 @@ public class WorldMapHelper {
      * @return карту трассы
      */
     public int[][] calculateWorldMap(int wTileSize) {
-        int[][] wMap = new int[worldWidth * wTileSize][worldHeight * wTileSize];
+        int[][] wMap = new int[worldHeight * wTileSize][worldWidth * wTileSize];
         TileToMatrix worldTile = new TileToMatrix(wTileSize, wTileSize / 10);
         int[][] tileMatrix;
-        for (int i = 0; i < worldHeight; i++) {
-            for (int j = 0; j < worldWidth; j++) {
-                tileMatrix = worldTile.getMatrix(strategy.mapTiles[i][j]);
-                //worldTile.printCurTileToFile("tile "+i+" "+j+" .txt");
-                for (int q = 0; q < wTileSize; q++) {
-                    //System.out.println("q: " + q);
-                    System.arraycopy(tileMatrix[q], 0, wMap[j * wTileSize + q], i * wTileSize, wTileSize);
+        for (int tileX = 0; tileX < worldWidth; tileX++) {
+            for (int tileY = 0; tileY < worldHeight; tileY++) {
+                tileMatrix = worldTile.getMatrix(strategy.mapTiles[tileX][tileY]);
+                for (int x = 0; x < tileSize; x++) {
+                    for (int y = 0; y < tileSize; y++) {
+                        wMap[tileY * tileSize + y][tileX * tileSize + x] = tileMatrix[y][x];
+                    }
                 }
             }
         }
-        /*
-         //нанесение системных ключевых точек
-         int[][] wayPoints = world.getWaypoints();
-         for (int[] wayPoint1 : wayPoints) {
-         int x = wayPoint1[0] * wTileSize + wTileSize / 2;
-         int y = wayPoint1[1] * wTileSize + wTileSize / 2;
-         for (int delta1 = -wTileSize / 7; delta1 < wTileSize / 7; delta1++) {
-         for (int delta2 = -wTileSize / 7; delta2 < wTileSize / 7; delta2++) {
-         wMap[y + delta1][x + delta2] = wayPoint;
-         }
-         }
-         }
-         */
         return wMap;
     }
 
@@ -109,9 +96,9 @@ public class WorldMapHelper {
      */
     public void printWorldMapToFile(String fileName) {
         try (FileWriter writer = new FileWriter(fileName, false)) {
-            for (int x = 0; x < worldHeight * worldTileSize; x++) {
+            for (int x = 0; x < worldWidth * worldTileSize; x++) {
                 String s = "";
-                for (int y = 0; y < worldWidth * worldTileSize; y++) {
+                for (int y = 0; y < worldHeight * worldTileSize; y++) {
                     switch (strategy.worldMap[x][y]) {
                         case selfCar:
                             s += '.';

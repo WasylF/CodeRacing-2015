@@ -187,19 +187,19 @@ public abstract class StrategyWslF {
         }
 
         mapTiles = world.getTilesXY();
-        worldHeight = mapTiles.length;
-        worldWidth = mapTiles[0].length;
+        worldHeight = mapTiles[0].length;
+        worldWidth = mapTiles.length;
         worldHW = Math.max(worldHeight, worldWidth) + 1;
 
         tileSize = (int) (game.getTrackTileSize() + 0.1);
         marginSize = (int) (game.getTrackTileMargin() + 0.1);
 
         tileHelper = new TileHelper(self, world, game, move, this);
-        worldMapHelper = new WorldMapHelper(worldHeight, worldWidth, self, world, game, move, this);
+        worldMapHelper = null;//new WorldMapHelper(worldHeight, worldWidth, self, world, game, move, this);
         worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
         distanceHelper = new DistanceHelper(tileSize, marginSize, worldWidth, worldHeight, worldHW, this, worldGraphHelper, worldMapHelper, tileHelper);
 
-        worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
+       // worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
     }
 
     protected void initAll(Car self, World world, Game game, Move move) {
@@ -306,7 +306,6 @@ public abstract class StrategyWslF {
      * @param sTileY ордината следующего ключевого тайла
      * @param fTileX абсцисса текущего тайла
      * @param fTileY ордината текущего тайла
-     * @param g граф карты трасы
      * @return следующий тайл для посещения (он соседний с текущим)
      */
     protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY) {
