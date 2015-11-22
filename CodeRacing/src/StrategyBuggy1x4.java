@@ -249,7 +249,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         angleToWaypoint = carDirection.getAngle(toNextWayPoint);
 
-        if (abs(angleToWaypoint) > PI / 8
+        if (abs(angleToWaypoint) > PI / 3
                 && abs(angleToWaypoint) * speed.length() * speed.length() > 2.5D * 2.5D * PI) {
             move.setBrake(true);
             return;
@@ -261,11 +261,15 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
                     && signum(self.getSpeedY()) * (relativeY - tileSize / 2) > 0) {
                 move.setBrake(true);
+                move.setEnginePower(1.0);
+                return;
             }
 
             if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL
                     && signum(self.getSpeedX()) * (relativeX - tileSize / 2) > 0) {
                 move.setBrake(true);
+                move.setEnginePower(1.0);
+                return;
             }
         }
     }
