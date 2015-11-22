@@ -1,7 +1,4 @@
 
-import java.io.FileWriter;
-import java.io.IOException;
-import static java.lang.StrictMath.abs;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -171,6 +168,7 @@ public abstract class StrategyWslF {
      * планируется добавить расстояние до машин опонентов
      */
     protected DistanceHelper distanceHelper;
+    protected List<PairIntInt> wayToNextKeyPoint;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -259,7 +257,7 @@ public abstract class StrategyWslF {
      * @param g граф карты трасы
      * @return следующий тайл для посещения (он соседний с текущим)
      */
-    protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY, int[][] g) {
+    protected List<PairIntInt> getWayByBFS(int sTileX, int sTileY, int fTileX, int fTileY, int[][] g) {
         int start = sTileX * worldHW + sTileY;
         int finish = fTileX * worldHW + fTileY;
         double[] dist = new double[g.length];
@@ -289,10 +287,42 @@ public abstract class StrategyWslF {
             }
         }
 
-        PairIntInt pii = new PairIntInt(sTileX, sTileY);
-        if (comeFrom[finish] != -1) {
-            pii = new PairIntInt(comeFrom[finish] / worldHW, comeFrom[finish] % worldHW);
+        LinkedList<PairIntInt> list = new LinkedList<>();
+        while (comeFrom[finish] != -1 && comeFrom[finish] != start) {
+            PairIntInt pii = new PairIntInt(comeFrom[finish] / worldHW, comeFrom[finish] % worldHW);
+            list.add(pii);
+            finish = comeFrom[finish];
         }
-        return pii;
+        list.add(new PairIntInt(start / worldHW, start / worldHW));
+        return list;
     }
+
+    /**
+     * вычисление тайла, в который будем направляться. Метод работает обратным
+     * ходом, то есть мы движемся от следующего ключевого до стартового
+     * (текущего)
+     *
+     * @param sTileX абсцисса следующего ключевого тайла
+     * @param sTileY ордината следующего ключевого тайла
+     * @param fTileX абсцисса текущего тайла
+     * @param fTileY ордината текущего тайла
+     * @param g граф карты трасы
+     * @return следующий тайл для посещения (он соседний с текущим)
+     */
+    protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY) {
+        int[][] g = worldGraphHelper.getCopyWorldGraph();
+        //PairIntInt nextTile =
+        List<PairIntInt> way = getWayByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
+        PairIntInt ans = way.get(0);
+        if (way.size() < 3) {
+            List<PairIntInt> addWay
+                    = getWayByBFS(systemWayPoints[self.getNextWaypointIndex() + 1].first,
+                            systemWayPoints[self.getNextWaypointIndex() + 1].second,
+                            self.getNextWaypointX(), self.getNextWaypointY(), g);
+            way.addAll(addWay);
+        }
+        wayToNextKeyPoint = way;
+        return ans;
+    }
+
 }
