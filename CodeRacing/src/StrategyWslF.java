@@ -120,6 +120,10 @@ public abstract class StrategyWslF {
      */
     protected int curTileY;
     /**
+     * координаты текущего тайла
+     */
+    protected PairIntInt curTile;
+    /**
      * абсцисса центра машины относительно текущего тайла
      */
     protected int relativeX;
@@ -132,8 +136,7 @@ public abstract class StrategyWslF {
      * матрица 800х800 которая отображает состаяние текущего тайла [0][0] -
      * левый верхний угол [tileSize-1][tileSize-1] - правый нижний угол
      */
-    protected int[][] curTile;
-
+    protected int[][] currentTile;
     /**
      * скорость на предыдущем ходу
      */
@@ -214,6 +217,7 @@ public abstract class StrategyWslF {
 
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
+        curTile = new PairIntInt(curTileX, curTileY);
         relativeX = (int) (self.getX()) % tileSize;
         relativeY = (int) (self.getY()) % tileSize;
     }
@@ -334,4 +338,25 @@ public abstract class StrategyWslF {
         return ans;
     }
 
+    /**
+     * нахождение тайла в котором находится точка (х,у)
+     *
+     * @param x абсцисса объекта
+     * @param y ордината объекта
+     * @return координаты тайла
+     */
+    protected PairIntInt getTileOfObject(double x, double y) {
+        return new PairIntInt((int) (x / tileSize), (int) (y / tileSize));
+    }
+
+    /**
+     * Манхэттенское расстояние между тайлами
+     *
+     * @param tile1
+     * @param tile2
+     * @return расстояние
+     */
+    protected int getTileDistance(PairIntInt tile1, PairIntInt tile2) {
+        return Math.abs(tile1.first - tile2.first) + Math.abs(tile1.second - tile2.second);
+    }
 }

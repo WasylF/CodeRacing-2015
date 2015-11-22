@@ -5,6 +5,8 @@ import java.lang.*;
 import static java.lang.StrictMath.*;
 import java.util.LinkedList;
 import java.util.Queue;
+import model.Bonus;
+import model.BonusType;
 import model.Car;
 import model.Move;
 import model.TileType;
@@ -86,6 +88,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
 
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
 
+        shouldGetBonus();
+
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         double angleToWaypoint = carDirection.getAngle(toNextWayPoint);
 
@@ -96,6 +100,32 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         activateIfNeedBreaks(angleToWaypoint, speed);
 
         activateIfNeedAmmo();
+    }
+
+    private boolean shouldGetBonus() {
+        Bonus[] bonuses = world.getBonuses();
+        for (Bonus bonus : bonuses) {
+            PairIntInt bonusCoordinate = new PairIntInt(bonus.getX(), bonus.getY());
+            PairIntInt bonusTile = getTileOfObject(bonus.getX(), bonus.getY());
+            if (getTileDistance(curTile, bonusTile) < 2) {
+                Vector toBonus = new Vector(bonus.getX() - self.getX(), bonus.getY() - self.getY());
+                Vector toWayPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint.first, nextWayPoint.second));
+                if (abs(toBonus.getAngle(toWayPoint)) > PI / 20) {
+                    continue;
+                }
+                double angleToBonus = abs(curSpeed.getAngle(toBonus));
+                if ((angleToBonus < PI / 60)
+                        || (angleToBonus < PI / 15 && self.getDistanceTo(bonus) > tileSize)
+                        || (angleToBonus < PI / 10 && bonus.getType() == BonusType.PURE_SCORE)
+                        || (angleToBonus < PI / 10 && self.getDurability() < 0.9
+                        && bonus.getType() == BonusType.REPAIR_KIT)) {
+                    nextWayPoint = bonusCoordinate;
+                    return true;
+                }
+
+            }
+        }
+        return false;
     }
 
     /**
@@ -116,7 +146,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return true;
         }
 
-        if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-3 && previousSpeed.length() < 1e-3) {
+        if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-1 && previousSpeed.length() < 1e-1) {
             goBack = numberOfTickToGoBack;
             return true;
         }
