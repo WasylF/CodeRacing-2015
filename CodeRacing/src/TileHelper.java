@@ -11,7 +11,7 @@ import model.World;
 
 /**
  *
- * @author Wід_А
+ * @author Wsl_F
  */
 public class TileHelper {
 
@@ -41,7 +41,7 @@ public class TileHelper {
      * машины, планируется добавить машины соперников
      */
     public void calculateCurTile() {
-        strategy.curTile = tileToMatrix.getMatrix(strategy.mapTiles[strategy.curTileX][strategy.curTileY]);
+        strategy.currentTile = tileToMatrix.getMatrix(strategy.mapTiles[strategy.curTileX][strategy.curTileY]);
 
         Point[] rectangleCar = getCarVertexCoordinates(strategy.self);
         Point minP = new Point();
@@ -135,7 +135,7 @@ public class TileHelper {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return strategy.wall;
         }
-        return strategy.curTile[y][x];
+        return strategy.currentTile[y][x];
     }
 
     /**
@@ -149,7 +149,7 @@ public class TileHelper {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return false;
         }
-        strategy.curTile[y][x] = val;
+        strategy.currentTile[y][x] = val;
         return true;
     }
 
@@ -158,14 +158,14 @@ public class TileHelper {
     }
 
     /**
-     * печатает в файл curTile.txt схематическое изображение текущего тайла
+     * печатает в файл currentTile.txt схематическое изображение текущего тайла
      */
     public void printCurTileToFile() {
         try (FileWriter writer = new FileWriter("curTile.txt", false)) {
             for (int x = 0; x < tileSize; x++) {
                 String s = "";
                 for (int y = 0; y < tileSize; y++) {
-                    switch (strategy.curTile[x][y]) {
+                    switch (strategy.currentTile[x][y]) {
                         case StrategyWslF.selfCar:
                             s += '.';
                             break;
