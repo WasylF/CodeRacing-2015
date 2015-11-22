@@ -148,6 +148,10 @@ public abstract class StrategyWslF {
     /**
      * копия предыдущего хода
      */
+    /**
+     * вектор направления корпуса машины
+     */
+    protected Vector carDirection;
     protected Move previousMove;
 
     /**

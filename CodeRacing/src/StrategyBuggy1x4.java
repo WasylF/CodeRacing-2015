@@ -58,6 +58,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void prepearMove() {
         curSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
+        carDirection = new Vector(self.getAngle());
         tileHelper.calculateCurTile();
         nextWayPoint = getNextWayPoint();
         System.out.println("NextWayPoint: " + nextWayPoint);
@@ -86,7 +87,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
 
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
-        double angleToWaypoint = speed.getAngle(toNextWayPoint);
+        double angleToWaypoint = carDirection.getAngle(toNextWayPoint);
 
         double wheelTurn = getWheelTurn(angleToWaypoint);
 
@@ -103,7 +104,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return тру, если нужно
      */
     private boolean shouldGoBack() {
-        Vector opCarDirect = new Vector(self.getAngle());
+        Vector opCarDirect = new Vector(carDirection);
         opCarDirect.rotateVector(PI);
         //если уперлись задом в стенку, то нужно ехать вперед
         if (distanceHelper.getDistanceToWall(self, PI / 30, opCarDirect) < 2 * carHeight / 3) {
@@ -245,7 +246,6 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             move.setBrake(true);
             return;
         }
-        Vector carDirection = new Vector(self.getAngle());
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         angleToWaypoint = carDirection.getAngle(toNextWayPoint);
 
