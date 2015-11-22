@@ -255,7 +255,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             return;
         }
 
-        if (mapTiles[nextTile.first][nextTile.second] != TileType.HORIZONTAL
+        if (speed.length() > 10
+                && mapTiles[nextTile.first][nextTile.second] != TileType.HORIZONTAL
                 && mapTiles[nextTile.first][nextTile.second] != TileType.VERTICAL) {
             // если проехали больше половины тайла
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
