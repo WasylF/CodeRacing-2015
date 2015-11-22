@@ -125,11 +125,11 @@ public abstract class StrategyWslF {
     /**
      * абсцисса центра машины относительно текущего тайла
      */
-    protected int selfX;
+    protected int relativeX;
     /**
      * ордината центра машина относительно текущего тайла
      */
-    protected int selfY;
+    protected int relativeY;
 
     /**
      * матрица 800х800 которая отображает состаяние текущего тайла [0][0] -
@@ -158,10 +158,6 @@ public abstract class StrategyWslF {
     protected abstract void move();
 
     protected void initFirst(Car self, World world, Game game, Move move) {
-        tileHelper = new TileHelper(self, world, game, move, this);
-        worldMapHelper = new WorldMapHelper(worldHeight, worldWidth, self, world, game, move, this);
-        worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
-
         int[][] tWayPoints = world.getWaypoints();
         systemWayPoints = new PairIntInt[tWayPoints.length * 3];
         for (int i = 0; i < tWayPoints.length; i++) {
@@ -178,8 +174,10 @@ public abstract class StrategyWslF {
         tileSize = (int) (game.getTrackTileSize() + 0.1);
         marginSize = (int) (game.getTrackTileMargin() + 0.1);
 
-        //      int n = world.getWaypoints().length;
-//        nextTile = new PairIntInt[worldWidth + 5][worldHeight + 5][n + 1];
+        tileHelper = new TileHelper(self, world, game, move, this);
+        worldMapHelper = new WorldMapHelper(worldHeight, worldWidth, self, world, game, move, this);
+        worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
+
         worldMap = worldMapHelper.calculateWorldMap(worldTileSize);
     }
 
@@ -195,8 +193,8 @@ public abstract class StrategyWslF {
 
         curTileX = (int) (self.getX() / game.getTrackTileSize());
         curTileY = (int) (self.getY() / game.getTrackTileSize());
-        selfX = (int) (self.getX()) % tileSize;
-        selfY = (int) (self.getY()) % tileSize;
+        relativeX = (int) (self.getX()) % tileSize;
+        relativeY = (int) (self.getY()) % tileSize;
     }
 
     protected int getColorOfCar(Car car) {
@@ -260,7 +258,7 @@ public abstract class StrategyWslF {
             }
 
             for (int v : g[current]) {
-                if (Math.abs(dist[v] - (dist[current] + add)) > 1e-1) {
+                if ((dist[current] + add) < dist[v] && Math.abs(dist[v] - (dist[current] + add)) > 1e-1) {
                     dist[v] = dist[current] + add;
                     comeFrom[v] = current;
                     q.add(v);

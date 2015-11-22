@@ -117,7 +117,8 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return тру, если нужно
      */
     private boolean shouldGoBack() {
-        Vector opCarDirect = new Vector(self.getAngle() + PI);
+        Vector opCarDirect = new Vector(self.getAngle());
+        opCarDirect.rotateVector(PI);
         //если уперлись задом в стенку, то нужно ехать вперед
         if (getDistanceToWall(self, PI / 30, opCarDirect) < 2 * carHeight / 3) {
             goBack = 0;
@@ -231,7 +232,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * отладочный вывод в консоль
      */
     private void printDebug() {
-        System.out.println("car center: (" + selfX + " , " + selfY + ")   speed: " + curSpeed + "   curEnginePower: " + move.getEnginePower());
+        System.out.println("car center: (" + relativeX + " , " + relativeY + ")   speed: " + curSpeed + "   curEnginePower: " + move.getEnginePower());
         if (curSpeed.y > 0 && goBack > 0) {
             for (int i = 0; i < 10; i++) {
                 System.out.println("Speed>0!!!!!!!!!!!      timeDiff: " + (numberOfTickToGoBack - goBack));
@@ -480,8 +481,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private PairIntInt getNextWayPoint() {
         PairIntInt nextTile = getNextTile();
+        //устанавливаем точку - середину следующего тайла
         PairIntInt nextPoint = new PairIntInt((int) ((nextTile.first + 0.5) * tileSize),
                 (int) ((nextTile.second + 0.5) * tileSize));
+
         return nextPoint;
     }
 
@@ -490,7 +493,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * @return тайл в который нужно ехать автомобилю
      */
     protected PairIntInt getNextTile() {
-        int [][] g= worldGraphHelper.getCopyWorldGraph();
+        int[][] g = worldGraphHelper.getCopyWorldGraph();
         PairIntInt nextTile = getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
         return nextTile;
     }

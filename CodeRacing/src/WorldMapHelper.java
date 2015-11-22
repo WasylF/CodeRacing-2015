@@ -83,7 +83,7 @@ public class WorldMapHelper {
                 tileMatrix = worldTile.getMatrix(strategy.mapTiles[i][j]);
                 //worldTile.printCurTileToFile("tile "+i+" "+j+" .txt");
                 for (int q = 0; q < wTileSize; q++) {
-                    System.out.println("q: " + q);
+                    //System.out.println("q: " + q);
                     System.arraycopy(tileMatrix[q], 0, wMap[j * wTileSize + q], i * wTileSize, wTileSize);
                 }
             }

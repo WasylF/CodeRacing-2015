@@ -26,30 +26,43 @@ public class WorldGraphHelper {
      * граф карты трасы
      */
     private final int[][] worldGraph;
-    
+    /**
+     * количество вершин в графе
+     */
+    private final int graphSize;
+
     public WorldGraphHelper(StrategyWslF strategy, int worldWidth, int worldHeight, int worldHW) {
         this.strategy = strategy;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
         this.worldHW = worldHW;
-        this.worldGraph= buildWorldGraph();
+        this.graphSize = worldHW * worldHW + 10;
+
+        this.worldGraph = buildWorldGraph();
     }
 
     /**
-     * 
+     *
      * @return копию графа карты трасы
      */
     public int[][] getCopyWorldGraph() {
-        return strategy.get2DArrayCopy(worldGraph);
+        int[][] g = new int[graphSize][];
+
+        for (int i = 0; i < graphSize; i++) {
+            g[i] = new int[worldGraph[i].length];
+            System.arraycopy(worldGraph[i], 0, g[i], 0, worldGraph[i].length);
+        }
+
+        return g;
     }
-    
+
     /**
      * построение графа карты номер вершини : v= x*worldHW+y
      *
      * @return граф
      */
-    protected int[][] buildWorldGraph() {
-        int[][] g = new int[worldHeight * worldWidth][];
+    private int[][] buildWorldGraph() {
+        int[][] g = new int[graphSize][];
         for (int x = 0; x < worldWidth; x++) {
             for (int y = 0; y < worldHeight; y++) {
                 int cur = x * worldHW + y;
@@ -109,34 +122,39 @@ public class WorldGraphHelper {
                         continue;
                 }
                 g[cur] = new int[list.size()];
-                for (int i = 0; i < list.size(); i++) {
+                for (int i = list.size() - 1; i >= 0; i--) {
                     g[cur][i] = list.poll();
                 }
             }
         }
 
+        for (int i = 0; i < graphSize; i++) {
+            if (g[i] == null) {
+                g[i] = new int[0];
+            }
+        }
         return g;
     }
 
-    protected void addLeft(int x, int y, List<Integer> list) {
+    private void addLeft(int x, int y, List<Integer> list) {
         if (x - 1 >= 0) {
             list.add((x - 1) * worldHW + y);
         }
     }
 
-    protected void addRight(int x, int y, List<Integer> list) {
+    private void addRight(int x, int y, List<Integer> list) {
         if (x + 1 < worldWidth) {
             list.add((x + 1) * worldHW + y);
         }
     }
 
-    protected void addUp(int x, int y, List<Integer> list) {
+    private void addUp(int x, int y, List<Integer> list) {
         if (y >= 1) {
             list.add(x * worldHW + y - 1);
         }
     }
 
-    protected void addDown(int x, int y, List<Integer> list) {
+    private void addDown(int x, int y, List<Integer> list) {
         if (y + 1 < worldHeight) {
             list.add(x * worldHW + y + 1);
         }
