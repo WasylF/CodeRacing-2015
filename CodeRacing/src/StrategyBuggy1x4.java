@@ -85,23 +85,23 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             goingBack();
             return;
         }
-
+        
         Vector speed = new Vector(self.getSpeedX(), self.getSpeedY());
-
+        
         shouldGetBonus();
-
+        
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         double angleToWaypoint = carDirection.getAngle(toNextWayPoint);
-
+        
         double wheelTurn = getWheelTurn(angleToWaypoint);
-
+        
         calulateEnginePower(angleToWaypoint, wheelTurn, speed);
-
+        
         activateIfNeedBreaks(angleToWaypoint, speed);
-
+        
         activateIfNeedAmmo();
     }
-
+    
     private boolean shouldGetBonus() {
         Bonus[] bonuses = world.getBonuses();
         for (Bonus bonus : bonuses) {
@@ -122,7 +122,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                     nextWayPoint = bonusCoordinate;
                     return true;
                 }
-
+                
             }
         }
         return false;
@@ -141,17 +141,17 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             goBack = 0;
             return false;
         }
-
+        
         if (goBack > 0) {
             return true;
         }
-
+        
         if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-1 && previousSpeed.length() < 1e-1) {
             goBack = numberOfTickToGoBack;
             return true;
         }
         int distToWall = distanceHelper.getDistanceToWallByCarDirection(PI / 60);
-
+        
         if ((abs(distToWall - carHeight / 2) < 20)
                 || (distToWall <= carHeight && curSpeed.module() >= 10)
                 || (distToWall < carHeight && goBack == 0
@@ -209,7 +209,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         } else {
             Vector toNextWasyPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
             double angleToWaypoint = curSpeed.getAngle(toNextWasyPoint);
-
+            
             if (goBack >= 0.4 * numberOfTickToGoBack) {
                 move.setWheelTurn(signum(getWheelTurn(angleToWaypoint)));
                 if (abs(angleToWaypoint) > PI / 2 && curSpeed.module() == 0) {
@@ -227,7 +227,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     @Override
     public void move() {
         System.out.println("Tick №" + world.getTick() + " starts");
-
+        
         initialization();
         if (world.getTick() >= startTick) {
             prepearMove();
@@ -235,7 +235,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             printDebug();
         }
         finalizeMove();
-
+        
         System.out.println("Tick №" + world.getTick() + " ends");
     }
 
@@ -278,13 +278,13 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         angleToWaypoint = carDirection.getAngle(toNextWayPoint);
-
+        
         if (abs(angleToWaypoint) > PI / 3
                 && abs(angleToWaypoint) * speed.length() * speed.length() > 2.5D * 2.5D * PI) {
             move.setBrake(true);
             return;
         }
-
+        
         if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)
                 && abs(angleToWaypoint) > PI / 180) {
             // если проехали больше половины тайла
@@ -294,7 +294,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 move.setEnginePower(1.0);
                 return;
             }
-
+            
             if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL
                     && signum(self.getSpeedX()) * (relativeX - tileSize / 2) > 0) {
                 move.setBrake(true);
@@ -317,7 +317,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 || mapTiles[tileX][tileY] == TileType.VERTICAL) {
             return false;
         }
-
+        
         if (wayToNextKeyPoint.size() < 2) {
             return true;
         }
@@ -329,15 +329,36 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * активирует расходники, если нужно
      */
     private void activateIfNeedAmmo() {
-        if (world.getTick() != 0 && world.getTick() % 555 == 0) {
-            move.setThrowProjectile(true);
-            move.setSpillOil(true);
+        Car[] cars = world.getCars();
+        for (Car car : cars) {
+            if (car != self) {
+                double angle = abs(self.getAngleTo(car));
+                if (angle < PI / 36) {
+                    move.setThrowProjectile(true);
+                }
+                if (angle > 3 * PI / 4 && self.getDistanceTo(car) < tileSize) {
+                    move.setSpillOil(true);
+                }
+            }
         }
         if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.05
                 && !move.isBrake()) {
             move.setUseNitro(true);
         }
         if (world.getTick() == startTick) {
+            move.setUseNitro(true);
+        }
+        int straightCountX = 0;
+        int straightCountY = 0;
+        for (PairIntInt tile : wayToNextKeyPoint) {
+            if (tile.first == nextWayPoint.first) {
+                straightCountX++;
+            }
+            if (tile.second == nextWayPoint.second) {
+                straightCountY++;
+            }
+        }
+        if (max(straightCountX, straightCountY) > 3) {
             move.setUseNitro(true);
         }
     }
@@ -357,7 +378,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
         // коэфициент отклонения от текущий координаты в случае движения вертикально или горизонтально
         double koef = 0.2;
-
+        
         switch (mapTiles[nextTile.first][nextTile.second]) {
             case LEFT_TOP_CORNER:
                 nextPoint.first += cornerTileOffset;
@@ -389,7 +410,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 break;
             default:
         }
-
+        
         return nextPoint;
     }
 
@@ -400,5 +421,5 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     protected PairIntInt getNextTile() {
         return getNextTileByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY);
     }
-
+    
 }
