@@ -3,10 +3,10 @@ import junit.framework.TestCase;
 
 /**
  *
- * @author Wasyl
+ * @author Wsl_F
  */
 public class VectorTest extends TestCase {
-
+    
     public static final double EPS = 1e-3;
 
     public VectorTest(String testName) {
@@ -447,5 +447,5 @@ public class VectorTest extends TestCase {
         assertEquals(instance.x, k);
         assertEquals(instance.x, k);
     }
-
+    
 }
