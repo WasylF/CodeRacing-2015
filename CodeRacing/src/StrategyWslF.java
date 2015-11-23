@@ -377,7 +377,8 @@ public abstract class StrategyWslF {
         Car[] cars = world.getCars();
         LinkedList<Car> list = new LinkedList<>();
         for (Car car : cars) {
-            if (Math.hypot(car.getX() - self.getX(), car.getY() - self.getY()) > carWidth) {
+            if (!car.isFinishedTrack() && car.getDurability() != 0
+                    && !car.isTeammate()) {
                 list.add(car);
             }
         }
