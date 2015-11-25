@@ -242,11 +242,11 @@ public class DistanceHelper {
      * @return расстояние до стены
      */
     public int getDistanceToWallBySpeed(double deltaAngle) {
-        Vector direvtionVector = new Vector(strategy.curSpeed);
-        if (direvtionVector.module() == 0) {
-            direvtionVector.getVectorByAngle(strategy.self.getAngle());
+        Vector directionVector = new Vector(strategy.curSpeed);
+        if (directionVector.module() == 0) {
+            directionVector.getVectorByAngle(strategy.self.getAngle());
         }
-        return getDistanceToWall(strategy.self, deltaAngle, direvtionVector);
+        return getDistanceToWall(strategy.self, deltaAngle, directionVector);
     }
 
     /**
@@ -257,8 +257,21 @@ public class DistanceHelper {
      * @return расстояние до стены
      */
     public int getDistanceToWallByCarDirection(double deltaAngle) {
-        Vector direvtionVector = new Vector(strategy.self.getAngle());
-        return getDistanceToWall(strategy.self, deltaAngle, direvtionVector);
+        Vector directionVector = new Vector(strategy.self.getAngle());
+        return getDistanceToWall(strategy.self, deltaAngle, directionVector);
+    }
+
+    /**
+     * находим расстояние от центра собственной машины до ближайшей стены за
+     * направление поиска берем вектор НАПРАВЛЕНИЯ авто
+     *
+     * @param deltaAngle угол отклонения от вектора скорости
+     * @return расстояние до стены
+     */
+    public int getDistanceToWallByOpCarDirection(double deltaAngle) {
+        Vector directionVector = new Vector(strategy.self.getAngle());
+        directionVector.rotateVector(PI);
+        return getDistanceToWall(strategy.self, deltaAngle, directionVector);
     }
 
 }
