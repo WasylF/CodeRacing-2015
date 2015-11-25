@@ -140,44 +140,37 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (world.getTick() < startTick * 1.5) {
             return false;
         }
-        Vector opCarDirect = new Vector(carDirection);
-        opCarDirect.rotateVector(PI);
+        double deltaAngle = PI / 30;
+        int backDistance = distanceHelper.getDistanceToWallByOpCarDirection(deltaAngle);
+        int forwardDistance = distanceHelper.getDistanceToWallByCarDirection(deltaAngle);
+        int speedDistance = distanceHelper.getDistanceToWallBySpeed(deltaAngle);
+
         //если уперлись задом в стенку, то нужно ехать вперед
-        if (distanceHelper.getDistanceToWall(self, PI / 30, opCarDirect) < carHeight) {
+        if (backDistance < carHeight) {
             goBack = 0;
             return false;
         }
 
         if (goBack > 0) {
-            int dist = distanceHelper.getDistanceToWallByCarDirection(PI / 180);
-            if (dist < tileSize / 2) {
-                return true;
-            }
+            return true;
         }
 
-        Car[] cars = getOpCars();
-        for (Car car : cars) {
-            if (self.getDistanceTo(car) < carHeight * 1.5 && abs(self.getAngleTo(car)) < PI / 4
-                    && curSpeed.length() < 1) {
-                goBack = numberOfTickToGoBack;
-                return true;
-            }
-        }
-
-        if (world.getTick() - startTick > 100 && curSpeed.length() < 1e-1 && previousSpeed.length() < 1e-1) {
+        // если лобовое расстояние до стены очень маленькое, то нужно сдавать задний ход
+        if (forwardDistance < carHeight && abs(forwardDistance - speedDistance) < tileSize / 10) {
             goBack = numberOfTickToGoBack;
             return true;
         }
-        int distToWall = distanceHelper.getDistanceToWallByCarDirection(PI / 60);
 
-        if ((abs(distToWall - carHeight / 2) < 20)
-                || (distToWall <= carHeight && curSpeed.module() >= 10)
-                || (distToWall < carHeight && goBack == 0
-                && curSpeed.module() == 0
-                && world.getTick() > startTick + 10)) {
-            goBack = numberOfTickToGoBack;
-            System.out.println("goBack starts!");
-            return true;
+        // если мы уперлись в другую машину
+        if (curSpeed.module() == 0) {
+            Car[] cars = getOpCars();
+            for (Car car : cars) {
+                Vector carSpeed = new Vector(car.getSpeedX(), car.getSpeedY());
+                if (carSpeed.module() == 0 && self.getDistanceTo(car) < 1.2 * carHeight) {
+                    goBack = numberOfTickToGoBack;
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -186,56 +179,27 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * совершения хода, при котором машина сдает назад
      */
     private void goingBack() {
-        Vector carVector = new Vector(self.getAngle());
-        //1 - едем вперед, -1 - назад
-        int goingDirection = curSpeed.getPositiveAngle(carVector) <= PI / 2 ? 1 : -1;
-        move.setBrake(false);
-        move.setSpillOil(false);
-        move.setUseNitro(false);
-        if (goBack > 0.4 * numberOfTickToGoBack) {
-            move.setEnginePower(-1.0);
-            //если скорость направленна в сторону капота
-            if (goingDirection == 1 && curSpeed.length() > 5e-1) {
-                move.setBrake(true);
-                move.setEnginePower(0);
-                if (goBack % 2 == 0) {
-                    goBack += 3;
-                }
-            }
-            /* if (goBack % 3 == 0) {
-             goBack++;
-             }*/
-        } else {
-            // если скорость направленна в сторону капота
-            if (goingDirection == 1 || curSpeed.module() < 2) {
-                goBack = (int) (max(goBack, 20) * 1.5);
-            } else {
-                if (curSpeed.module() > 2) {
-                    move.setBrake(true);
-                    //goBack++;
-                } else {
-                    if (goBack > 0.1 * numberOfTickToGoBack) {
-                        move.setEnginePower(0.01);
-                    } else {
-                        move.setEnginePower(1);
-                    }
-                }
-            }
-        }
-        if (goingDirection == 1 || goBack >= 0.6 * numberOfTickToGoBack) {
-            move.setWheelTurn(0);
-        } else {
-            Vector toNextWasyPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
-            double angleToWaypoint = curSpeed.getAngle(toNextWasyPoint);
+        Vector opDirect = new Vector(carDirection);
+        opDirect.rotateVector(PI);
+        Vector toPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint));
+        double angle = 2 * toPoint.getAngle(opDirect);
+        // находим точку симметричную следующей, для движения задним ходом в ее направлении
+        toPoint.rotateVector(angle);
+        nextWayPoint = new PairIntInt(self.getX() + toPoint.x, self.getY() + toPoint.y);
 
-            if (goBack >= 0.4 * numberOfTickToGoBack) {
-                move.setWheelTurn(signum(getWheelTurn(angleToWaypoint)));
-                if (abs(angleToWaypoint) > PI / 2 && curSpeed.module() == 0) {
-                    goBack += 2;
-                }
-            } else {
-                getWheelTurn(angleToWaypoint);
-            }
+        // угол до следующей точки
+        angle = opDirect.getAngle(toPoint);
+        getWheelTurn(angle);
+        int minDist = min(distanceHelper.getDistanceToWallByCarDirection(PI / 90),
+                distanceHelper.getDistanceToWallBySpeed(angle));
+        minDist = min(minDist, distanceHelper.getDistanceToNearesOpCar(self));
+        move.setUseNitro(false);
+        if (minDist > 3 * carHeight) {//если пора заканчивать движение назад
+            move.setEnginePower(1.0);
+            move.setBrake(true);
+        } else {
+            move.setEnginePower(-1.0);
+            move.setBrake(false);
         }
     }
 
