@@ -290,11 +290,7 @@ public abstract class StrategyWslF {
         Queue<Integer> q = new LinkedList<>();
         q.add(start);
         dist[start] = 0;
-        if (Math.abs(self.getSpeedX()) > Math.abs(self.getSpeedY())) {
-            direct[start] = self.getSpeedX() > 0 ? 1 : -1;
-        } else {
-            direct[start] = self.getSpeedY() > 0 ? 2 : -2;
-        }
+        direct[start] = getCurDirection();
         while (!q.isEmpty()) {
             int current = q.poll();
             int cX = current / worldHW;
@@ -335,6 +331,16 @@ public abstract class StrategyWslF {
         }
 
         return list;
+    }
+
+    protected int getCurDirection() {
+        int ans = 0;
+        if (Math.abs(self.getSpeedX()) > Math.abs(self.getSpeedY())) {
+            ans = self.getSpeedX() > 0 ? 1 : -1;
+        } else {
+            ans = self.getSpeedY() > 0 ? 2 : -2;
+        }
+        return ans;
     }
 
     /**
