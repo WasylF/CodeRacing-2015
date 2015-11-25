@@ -171,7 +171,15 @@ public abstract class StrategyWslF {
      * планируется добавить расстояние до машин опонентов
      */
     protected DistanceHelper distanceHelper;
+    /**
+     * последовательность тайлов для достижения следующей ключевой точки
+     */
     protected List<PairIntInt> wayToNextKeyPoint;
+    /**
+     * направления движения в тайла списка wayToNextKeyPoint 1 - вправо; -1 -
+     * влево; 2 - вниз; -2 - вверх;
+     */
+    protected List<Integer> directToNextKeyPoint;
 
     public void move(Car self, World world, Game game, Move move) {
         initAll(self, world, game, move);
@@ -260,9 +268,12 @@ public abstract class StrategyWslF {
      * @param sTileX абсцисса текущего тайла
      * @param sTileY ордината текущего тайла
      * @param g граф карты трасы
+     * @param direction направление оптимального движения в тайле
+     * соответствующем тайле из ответа
      * @return следующий тайл для посещения (он соседний с текущим)
      */
-    protected List<PairIntInt> getWayByBFS(int fTileX, int fTileY, int sTileX, int sTileY, int[][] g) {
+    protected List<PairIntInt> getWayByBFS(int fTileX, int fTileY,
+            int sTileX, int sTileY, int[][] g, LinkedList<Integer> direction) {
         int start = sTileX * worldHW + sTileY;
         int finish = fTileX * worldHW + fTileY;
         double[] dist = new double[g.length];
@@ -289,11 +300,10 @@ public abstract class StrategyWslF {
             int cX = current / worldHW;
             int cY = current % worldHW;
             double add;
-            int changeDir = 0;
             // штраф за поворот на 90
-            final double fine90 = 0.4;
+            final double fine90 = 0.45;
             // штраф за поворот на 180
-            final double fine180 = 1.5;
+            final double fine180 = 2.5;
             for (int v : g[current]) {
                 add = 1;
                 int vX = v / worldHW;
@@ -316,9 +326,11 @@ public abstract class StrategyWslF {
 
         LinkedList<PairIntInt> list = new LinkedList<>();
         list.addFirst(new PairIntInt(finish / worldHW, finish % worldHW));
+        direction.addFirst(direct[finish]);
         while (comeFrom[finish] != -1 && comeFrom[finish] != start) {
             PairIntInt pii = new PairIntInt(comeFrom[finish] / worldHW, comeFrom[finish] % worldHW);
             list.addFirst(pii);
+            direction.addFirst(direct[comeFrom[finish]]);
             finish = comeFrom[finish];
         }
 
@@ -339,16 +351,42 @@ public abstract class StrategyWslF {
     protected PairIntInt getNextTileByBFS(int sTileX, int sTileY, int fTileX, int fTileY) {
         int[][] g = worldGraphHelper.getCopyWorldGraph();
         //PairIntInt nextTile =
-        List<PairIntInt> way = getWayByBFS(self.getNextWaypointX(), self.getNextWaypointY(), curTileX, curTileY, g);
+        LinkedList<Integer> direction = new LinkedList<>();
+        List<PairIntInt> way = getWayByBFS(self.getNextWaypointX(), self.getNextWaypointY(),
+                curTileX, curTileY, g, direction);
         PairIntInt ans = way.get(0);
         if (way.size() < 5) {
+            LinkedList<Integer> addDirect = new LinkedList<>();
             List<PairIntInt> addWay
                     = getWayByBFS(systemWayPoints[self.getNextWaypointIndex() + 1].first,
                             systemWayPoints[self.getNextWaypointIndex() + 1].second,
-                            self.getNextWaypointX(), self.getNextWaypointY(), g);
+                            self.getNextWaypointX(), self.getNextWaypointY(),
+                            g, addDirect);
             way.addAll(addWay);
+            direction.addAll(addDirect);
         }
         wayToNextKeyPoint = way;
+        directToNextKeyPoint = direction;
+        return ans;
+    }
+
+    /**
+     * вычисление количества тайлов в пути до поворота
+     *
+     * @return количество тайлов до ближайшего поворота
+     */
+    protected int getTilesBeforeTirn() {
+        if (directToNextKeyPoint == null || directToNextKeyPoint.isEmpty()) {
+            return 0;
+        }
+        int dir = directToNextKeyPoint.get(0);
+        int ans = 1;
+        for (int i = 1; i < directToNextKeyPoint.size(); i++) {
+            if (directToNextKeyPoint.get(i) != dir) {
+                return ans;
+            }
+            ans++;
+        }
         return ans;
     }
 
@@ -374,6 +412,11 @@ public abstract class StrategyWslF {
         return Math.abs(tile1.first - tile2.first) + Math.abs(tile1.second - tile2.second);
     }
 
+    /**
+     * возвращает машины опонентов еще не закончивших трасу
+     *
+     * @return
+     */
     protected Car[] getOpCars() {
         Car[] cars = world.getCars();
         LinkedList<Car> list = new LinkedList<>();
