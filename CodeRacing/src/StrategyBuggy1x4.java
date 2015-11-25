@@ -346,6 +346,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
 
         int distToWall = distanceHelper.getDistanceToWallByCarDirection(PI / 360);
+        if (world.getTick() == startTick && distToWall > 2 * tileSize) {
+            move.setUseNitro(true);
+            return;
+        }
+
         if (distToWall < 3 * tileSize) {
             move.setUseNitro(false);
             return;
