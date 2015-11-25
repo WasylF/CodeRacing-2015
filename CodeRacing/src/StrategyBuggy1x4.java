@@ -179,27 +179,32 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      * совершения хода, при котором машина сдает назад
      */
     private void goingBack() {
-        Vector opDirect = new Vector(carDirection);
-        opDirect.rotateVector(PI);
-        Vector toPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint));
-        double angle = 2 * toPoint.getAngle(opDirect);
-        // находим точку симметричную следующей, для движения задним ходом в ее направлении
-        toPoint.rotateVector(angle);
-        nextWayPoint = new PairIntInt(self.getX() + toPoint.x, self.getY() + toPoint.y);
+        /*Vector opDirect = new Vector(carDirection);
+         opDirect.rotateVector(PI);
+         Vector toPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint));
+         double angleToWayPoint = carDirection.getAngle(toPoint);
+         double angle = 2 * toPoint.getAngle(opDirect);
+         // находим точку симметричную следующей, для движения задним ходом в ее направлении
+         toPoint.rotateVector(angle);
+         nextWayPoint = new PairIntInt(self.getX() + toPoint.x, self.getY() + toPoint.y);
+         */
+        double prevWheelTurn = signum(previousMove.getWheelTurn());
+        // если мы начали движение назад на текущем тике выворачиваем руль в противоположную сторону
+        //иначе оставляем как на предыдущем ходе
+        move.setWheelTurn(goBack == numberOfTickToGoBack ? -prevWheelTurn : prevWheelTurn);
 
-        // угол до следующей точки
-        angle = opDirect.getAngle(toPoint);
-        getWheelTurn(angle);
         int minDist = min(distanceHelper.getDistanceToWallByCarDirection(PI / 90),
-                distanceHelper.getDistanceToWallBySpeed(angle));
+                distanceHelper.getDistanceToWallBySpeed(PI / 90));
         minDist = min(minDist, distanceHelper.getDistanceToNearesOpCar(self));
         move.setUseNitro(false);
         if (minDist > 3 * carHeight) {//если пора заканчивать движение назад
             move.setEnginePower(1.0);
             move.setBrake(true);
+            move.setWheelTurn(0);
         } else {
             move.setEnginePower(-1.0);
-            move.setBrake(false);
+            // тормозим только в случае если еще движемся вперед
+            move.setBrake(self.getEnginePower() > 0);
         }
     }
 
