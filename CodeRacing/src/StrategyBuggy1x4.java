@@ -62,7 +62,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         curSpeed = new Vector(self.getSpeedX(), self.getSpeedY());
         carDirection = new Vector(self.getAngle());
         tileHelper.calculateCurTile();
-        tileHelper.printCurTileToFile();
+        //tileHelper.printCurTileToFile();
         nextWayPoint = getNextWayPoint();
         System.out.println("NextWayPoint: " + nextWayPoint);
     }

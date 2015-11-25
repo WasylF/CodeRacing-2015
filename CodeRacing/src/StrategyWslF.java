@@ -198,8 +198,8 @@ public abstract class StrategyWslF {
         marginSize = (int) (game.getTrackTileMargin() + 0.1);
 
         tileHelper = new TileHelper(self, world, game, move, this);
-        worldMapHelper = new WorldMapHelper(tileSize, 80, world, this);
-        worldMapHelper.printClearWorldMapToFile("ClearWorld");
+        worldMapHelper = new WorldMapHelper(tileSize, worldTileSize, world, this);
+        //worldMapHelper.printClearWorldMapToFile("ClearWorld");
         worldGraphHelper = new WorldGraphHelper(this, worldWidth, worldHeight, worldHW);
         distanceHelper = new DistanceHelper(tileSize, marginSize, worldWidth, worldHeight, worldHW, this, worldGraphHelper, worldMapHelper, tileHelper);
 

@@ -180,7 +180,7 @@ public class WorldMapHelper {
      * @param absolute абсолютная координата
      * @return относительную координату
      */
-    private int convertToWorldCordinate(double absolute) {
+    public int convertToWorldCordinate(double absolute) {
         return (int) (absolute * worldTileSize) / tileSize;
     }
 
@@ -190,7 +190,7 @@ public class WorldMapHelper {
      * @param worldCordinate
      * @return
      */
-    private int convertToAbsoluteCordinate(double worldCordinate) {
+    public int convertToAbsoluteCordinate(double worldCordinate) {
         return (int) (worldCordinate * tileSize) / worldTileSize;
     }
 
@@ -199,4 +199,7 @@ public class WorldMapHelper {
         return wMap;
     }
 
+    public int getClear(int x, int y) {
+        return ClearWorldMap[x][y];
+    }
 }

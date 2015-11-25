@@ -176,6 +176,21 @@ public class DistanceHelper {
     }
 
     /**
+     * возвращает корректную координату, то есть от 0 до tileSize-1 !!!
+     * изменяются значения внутри параметра @code(p)
+     *
+     * @param p входная координата
+     * @return подкорректированная
+     */
+    private PairIntInt getAccurateWorldCoordinate(PairIntInt p) {
+        p.first = max(0, p.first);
+        p.first = min(p.first, worldWidth * worldTileSize);
+        p.second = max(0, p.second);
+        p.second = min(p.second, worldWidth * worldTileSize);
+        return p;
+    }
+
+    /**
      * находим расстояние от центра машины до ближайшей стены
      *
      * @param car машина
@@ -185,21 +200,18 @@ public class DistanceHelper {
      * @return расстояние до стены
      */
     public int getDistanceToWall(Car car, double deltaAngle, Vector directionVector) {
-        int carColor = strategy.getColorOfCar(car);
-        int carX = (int) getRelativeCoordinate(car.getX());
-        int carY = (int) getRelativeCoordinate(car.getY());
-        if (directionVector.length() < 1e-1) {
+        directionVector = new Vector(directionVector);
+        int carX = (int) worldMapHelper.convertToWorldCordinate(car.getX());
+        int carY = (int) worldMapHelper.convertToWorldCordinate(car.getY());
+        if (directionVector.length() < 1e-3) {
             return tileSize;
         }
         directionVector.normalize();
-        while (max(abs(directionVector.x), abs(directionVector.y)) <= 1) {
-            directionVector.x *= 1.001;
-            directionVector.y *= 1.001;
-        }
+        directionVector.mult(1.001);
         final int numberOfTurns = 40;
         double turnAngle;
 
-        for (int d = 1; d <= tileSize; d++) {
+        for (int d = 1; d > 0; d++) {
             Vector vector = new Vector(directionVector);
             vector.rotateVector(-deltaAngle);
 
@@ -207,26 +219,18 @@ public class DistanceHelper {
             for (int i = 0; i <= numberOfTurns; i++) {
                 int x = (int) (carX + d * vector.x);
                 int y = (int) (carY + d * vector.y);
-                if (x <= 0 || y <= 0 || x >= tileSize || y >= tileSize) {
-                    x = getAccurateCoordinate(x);
-                    y = getAccurateCoordinate(y);
-                    if (tileHelper.getCurTile(x, y) == carColor
-                            || tileHelper.getCurTile(x, y) == empty) {
-                        return tileSize;
-                    } else {
-                        return d;
-                    }
-                }
-
-                if (tileHelper.getCurTile(x, y) == wall) {
-                    return d;
+                PairIntInt p = new PairIntInt(x, y);
+                getAccurateWorldCoordinate(p);
+                if (worldMapHelper.getClear(x, y) == wall) {
+                    return worldMapHelper.convertToAbsoluteCordinate(d);
                 }
                 vector.rotateVector(turnAngle);
             }
-            if (deltaAngle > PI / 30) {
-                deltaAngle -= turnAngle / 50;
+            if (deltaAngle > PI / 180) {
+                deltaAngle *= 0.95;
             }
         }
+        //should never happens
         return tileSize;
     }
 
