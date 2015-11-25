@@ -135,7 +135,7 @@ public class TileHelper {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return strategy.wall;
         }
-        return strategy.currentTile[y][x];
+        return strategy.currentTile[x][y];
     }
 
     /**
@@ -149,7 +149,7 @@ public class TileHelper {
         if (x < 0 || y < 0 || x >= tileSize || y >= tileSize) {
             return false;
         }
-        strategy.currentTile[y][x] = val;
+        strategy.currentTile[x][y] = val;
         return true;
     }
 
@@ -162,9 +162,9 @@ public class TileHelper {
      */
     public void printCurTileToFile() {
         try (FileWriter writer = new FileWriter("curTile.txt", false)) {
-            for (int x = 0; x < tileSize; x++) {
+            for (int y = 0; y < tileSize; y++) {
                 String s = "";
-                for (int y = 0; y < tileSize; y++) {
+                for (int x = 0; x < tileSize; x++) {
                     switch (strategy.currentTile[x][y]) {
                         case StrategyWslF.selfCar:
                             s += '.';

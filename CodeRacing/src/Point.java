@@ -1,4 +1,6 @@
+
 import static java.lang.StrictMath.*;
+
 /**
  *
  * @author WslF
@@ -21,13 +23,18 @@ public class Point extends Object {
         this.x = x;
         this.y = y;
     }
-    
+
     public Point(Point p) {
-        x= p.x;
-        y= p.y;
+        x = p.x;
+        y = p.y;
     }
 
-     @Override
+    public Point(PairIntInt p) {
+        x = p.first;
+        y = p.second;
+    }
+
+    @Override
     public String toString() {
         return " (" + x + "," + y + ") ";
     }
@@ -77,5 +84,5 @@ public class Point extends Object {
     public Point getSymmetric(Point middle) {
         return new Point(2 * middle.x - x, 2 * middle.y - y);
     }
-    
+
 }

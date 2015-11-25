@@ -37,14 +37,15 @@ public class WorldMapHelper {
      * константа для отображения на матрице тайла ограждения/стен
      */
     public static final int wall = -100;
+
     /**
      * размер тайла в общей карте трека
      */
-    public static final int worldTileSize = 80;
+    public final int worldTileSize;
     /**
      * размер закругления в общей карте трека
      */
-    public static final int worldMarginSize = worldTileSize / 10;
+    public final int worldMarginSize;
     /**
      * ширина карты в тайлах
      */
@@ -60,30 +61,43 @@ public class WorldMapHelper {
 
 //end constants
     StrategyWslF strategy;
+    /**
+     * матрица трасы содержащяя только стены и совободные клетки
+     */
+    private final int[][] ClearWorldMap;
+    /**
+     * матрица трассы содержащяя не только стены, а и машины
+     */
+    private final int[][] WorldMap;
 
-    public WorldMapHelper(int worldHight, int worldWidth, Car self, World world, Game game, Move move, StrategyWslF strategy) {
-        this.worldWidth = worldWidth;
-        this.worldHeight = worldHight;
+    public WorldMapHelper(int tileSize, int worldTileSize, World world, StrategyWslF strategy) {
+        this.worldWidth = world.getWidth();
+        this.worldHeight = world.getHeight();
         this.strategy = strategy;
-        this.tileSize = (int) (game.getTrackTileSize() + 0.1);
+        this.tileSize = tileSize;
+        this.worldTileSize = worldTileSize;
+        this.worldMarginSize = (worldTileSize + 9) / 10;
+        ClearWorldMap = calculateClearWorldMap();
+        WorldMap = calculateWorldMap();
     }
 
     /**
-     * строит карту всей трассы
+     * строит карту всей трассы world[x][y] - содержимое точки с карты с
+     * координатами (x,y)
      *
-     * @param wTileSize размер стороны тайла на матрице
      * @return карту трассы
      */
-    public int[][] calculateWorldMap(int wTileSize) {
-        int[][] wMap = new int[worldHeight * wTileSize][worldWidth * wTileSize];
-        TileToMatrix worldTile = new TileToMatrix(wTileSize, wTileSize / 10);
+    private int[][] calculateClearWorldMap() {
+        int[][] wMap = new int[worldWidth * worldTileSize][worldHeight * worldTileSize];
+        TileToMatrix worldTile = new TileToMatrix(worldTileSize, worldMarginSize);
         int[][] tileMatrix;
+
         for (int tileX = 0; tileX < worldWidth; tileX++) {
             for (int tileY = 0; tileY < worldHeight; tileY++) {
                 tileMatrix = worldTile.getMatrix(strategy.mapTiles[tileX][tileY]);
-                for (int x = 0; x < tileSize; x++) {
-                    for (int y = 0; y < tileSize; y++) {
-                        wMap[tileY * tileSize + y][tileX * tileSize + x] = tileMatrix[y][x];
+                for (int x = 0; x < worldTileSize; x++) {
+                    for (int y = 0; y < worldTileSize; y++) {
+                        wMap[tileX * worldTileSize + x][tileY * worldTileSize + y] = tileMatrix[x][y];
                     }
                 }
             }
@@ -92,14 +106,16 @@ public class WorldMapHelper {
     }
 
     /**
-     * печатает в файл worldMap.txt схематическое изображение текущего тайла
+     * печатает в файл изображение карты
+     *
+     * @param fileName имя файла
      */
-    public void printWorldMapToFile(String fileName) {
+    public void printClearWorldMapToFile(String fileName) {
         try (FileWriter writer = new FileWriter(fileName, false)) {
-            for (int x = 0; x < worldWidth * worldTileSize; x++) {
+            for (int y = 0; y < ClearWorldMap[0].length; y++) {
                 String s = "";
-                for (int y = 0; y < worldHeight * worldTileSize; y++) {
-                    switch (strategy.worldMap[x][y]) {
+                for (int x = 0; x < ClearWorldMap.length; x++) {
+                    switch (ClearWorldMap[x][y]) {
                         case selfCar:
                             s += '.';
                             break;
@@ -113,7 +129,7 @@ public class WorldMapHelper {
                             s += '@';
                             break;
                         default:
-                            s += (strategy.worldMap[x][y]) % 10;
+                            s += (ClearWorldMap[x][y]) % 10;
                     }
                 }
 
@@ -126,84 +142,36 @@ public class WorldMapHelper {
     }
 
     /**
-     * печатает в файл worldMap.txt схематическое изображение текущего тайла
+     *
+     * @return копию матрици
      */
-    public void printWorldMapToFile(int[][] wMap, int wTileSize, String fileName) {
-        try (FileWriter writer = new FileWriter(fileName, false)) {
-            for (int x = 0; x < worldHeight * wTileSize; x++) {
-                String s = "";
-                for (int y = 0; y < worldWidth * wTileSize; y++) {
-                    switch (wMap[x][y]) {
-                        case selfCar:
-                            s += '.';
-                            break;
-                        case wall:
-                            s += '▓';
-                            break;
-                        case empty:
-                            s += ' ';
-                            break;
-                        case wayPoint:
-                            s += '@';
-                            break;
-                        default:
-                            s += (wMap[x][y]) % 10;
-                    }
-                }
+    private int[][] getCopy2D(int[][] ar) {
+        int[][] copy = new int[ar.length][ar[0].length];
 
-                writer.write(s + "\r\n");
+        for (int i = 0; i < ar.length; i++) {
+            for (int j = 0; j < ar[i].length; i++) {
+                copy[i][j] = ar[i][j];
             }
-        } catch (IOException ex) {
-
-            System.out.println(ex.getMessage());
         }
+        return copy;
     }
 
     /**
-     * задает значение val в матрице карты, с относительными координатами (х;у)
+     * возвращает копию матрицы трасы с нанесенными стенами и ничего больше
      *
-     * @param x абсцисса
-     * @param y ордината
-     * @param val значение
-     * @return true если установли значение
+     * @return
      */
-    public boolean setWorldMap(int x, int y, int val) {
-        if (x < 0 || y < 0
-                || x >= worldTileSize * worldHeight
-                || y >= worldTileSize * worldWidth) {
-            return false;
-        }
-        strategy.worldMap[y][x] = val;
-        return true;
+    public int[][] getClearWorld() {
+        return getCopy2D(ClearWorldMap);
     }
 
     /**
-     * возвращает значение в матрице карты, с относительными координатами (х;у)
+     * копия матрицы трасы со стенами и авто
      *
-     * @param x абсцисса
-     * @param y ордината
-     * @return значение в текущем тайле (стена/пусто/своя машина/...)
+     * @return
      */
-    public int getWorldMap(int x, int y) {
-        if (x < 0 || y < 0
-                || x >= worldTileSize * worldHeight
-                || y >= worldTileSize * worldWidth) {
-            return wall;
-        }
-        return strategy.worldMap[y][x];
-    }
-
-    /**
-     *
-     * @return копию матрици карты
-     */
-    public int[][] getCopyWorldMap() {
-        int[][] map = new int[worldTileSize * worldHeight][worldTileSize * worldWidth];
-
-        for (int i = 0; i < worldTileSize * worldHeight; i++) {
-            System.arraycopy(strategy.worldMap[i], 0, map[i], 0, worldTileSize * worldWidth);
-        }
-        return map;
+    public int[][] getWorldMap() {
+        return getCopy2D(WorldMap);
     }
 
     /**
@@ -216,8 +184,22 @@ public class WorldMapHelper {
         return (int) (absolute * worldTileSize) / tileSize;
     }
 
+    /**
+     * вычисление абсолютных координат по координатам "в мире"
+     *
+     * @param worldCordinate
+     * @return
+     */
     public int convertToAbsoluteCordinate(double worldCordinate) {
         return (int) (worldCordinate * tileSize) / worldTileSize;
     }
 
+    private int[][] calculateWorldMap() {
+        int[][] wMap = calculateClearWorldMap();
+        return wMap;
+    }
+
+    public int getClear(int x, int y) {
+        return ClearWorldMap[x][y];
+    }
 }
