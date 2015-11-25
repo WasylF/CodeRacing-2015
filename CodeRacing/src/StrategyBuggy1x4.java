@@ -383,9 +383,52 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         TileType nextTileType = clasifyNextTile();
         correctPointByTileType(nextPoint, nextTileType);
 
+        if (directToNextKeyPoint.size() > 2) {
+            //int curDirect = getCurDirection();
+            // если выполняем двойной поворот
+            if (directToNextKeyPoint.get(0) != directToNextKeyPoint.get(1)
+                    && directToNextKeyPoint.get(1) != directToNextKeyPoint.get(2)) {
+                correctPointDoubleTurn(nextPoint);
+            }
+        }
+
         return nextPoint;
     }
 
+    private void correctPointDoubleTurn(PairIntInt nextPoint) {
+        if (directToNextKeyPoint.size() < 3
+                || self.getDistanceTo(nextWayPoint.first, nextWayPoint.second) > tileSize / 2) {
+            return;
+        }
+
+        //int curDirect = getCurDirection();
+        int curDirect = directToNextKeyPoint.get(0);
+        // едем почти прямо
+        if (curDirect == directToNextKeyPoint.get(2)) {
+            // едем по х
+            if (abs(curDirect) == 1) {
+                nextPoint.first += curDirect * tileSize / 2;
+            } else {
+                nextPoint.second += (curDirect / 2) * tileSize / 2;
+                // едем по у 
+            }
+        } else {
+            /*         // поворот на 180
+             PairIntInt nnTile = wayToNextKeyPoint.get(1);
+             // едем по х
+             if (abs(curDirect) == 1) {
+             nextPoint.second += (curTileY - nnTile.second) * (tileSize / 2);
+             } else {
+             nextPoint.first += (curTileX - nnTile.first) * (tileSize / 2);
+             }
+             */
+        }
+    }
+
+    /**
+     * корректируем точку в зависимости от типа тайла
+     *
+     */
     private void correctPointByTileType(PairIntInt nextPoint, TileType nextTileType) {
         // максимально допустимое смещение машинки от центра тайла
         double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
