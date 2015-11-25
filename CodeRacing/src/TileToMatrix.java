@@ -57,6 +57,7 @@ public class TileToMatrix {
      */
     public int[][] getMatrix(TileType tileName) {
         ans = new int[tileSize][tileSize];
+        getClear();
 
         switch (tileName) {
             case EMPTY:
@@ -100,6 +101,9 @@ public class TileToMatrix {
                 getClear();
                 break;
         }
+        // сейчас ans содержить тайл "как на экране"
+        // теперь его нужно траспонировать
+        transpon();
         return ans;
     }
 
@@ -114,7 +118,7 @@ public class TileToMatrix {
     private void getVertical() {
         for (int i = 0; i < tileSize; i++) {
             for (int j = 0; j < tileSize; j++) {
-                if (j <= tileMargin || tileSize - j <= tileMargin) {
+                if (j < tileMargin || tileSize - j <= tileMargin) {
                     ans[i][j] = wall;
                 } else {
                     ans[i][j] = empty;
@@ -154,12 +158,12 @@ public class TileToMatrix {
     private void getLeftTopCorner() {
         // отрезаем верхние строчки
         for (int i = 0; i < tileSize; i++) {
-            for (int j = 0; j <= tileMargin; j++) {
+            for (int j = 0; j < tileMargin; j++) {
                 ans[i][j] = wall;
             }
         }
         // отрезаем левые столбцы
-        for (int i = 0; i <= tileMargin; i++) {
+        for (int i = 0; i < tileMargin; i++) {
             for (int j = 0; j < tileSize; j++) {
                 ans[i][j] = wall;
             }
@@ -189,8 +193,8 @@ public class TileToMatrix {
      */
     private void cutCorner(int x, int y, boolean invert) {
         int t = invert ? -1 : 1;
-        for (int i = 0; i <= tileMargin; i++) {
-            for (int j = 0; i + j <= tileMargin; j++) {
+        for (int i = 0; i < tileMargin; i++) {
+            for (int j = 0; i + j < tileMargin; j++) {
                 ans[x + t * i][y + t * j] = wall;
             }
         }
@@ -206,8 +210,8 @@ public class TileToMatrix {
      */
     private void cutCorner2(int x, int y, boolean invert) {
         int t = invert ? -1 : 1;
-        for (int i = 0; i <= tileMargin; i++) {
-            for (int j = 0; i + j <= tileMargin; j++) {
+        for (int i = 0; i < tileMargin; i++) {
+            for (int j = 0; i + j < tileMargin; j++) {
                 ans[x - t * i][y + t * j] = wall;
             }
         }
@@ -317,4 +321,13 @@ public class TileToMatrix {
         }
     }
 
+    private void transpon() {
+        for (int i = 0; i < tileSize; i++) {
+            for (int j = i + 1; j < tileSize; j++) {
+                int tmp = ans[i][j];
+                ans[i][j] = ans[j][i];
+                ans[j][i] = tmp;
+            }
+        }
+    }
 }
