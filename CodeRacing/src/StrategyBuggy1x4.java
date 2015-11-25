@@ -380,11 +380,58 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         PairIntInt nextPoint = new PairIntInt((int) ((nextTile.first + 0.5) * tileSize),
                 (int) ((nextTile.second + 0.5) * tileSize));
 
+        TileType nextTileType = clasifyNextTile();
+        correctPointByTileType(nextPoint, nextTileType);
+
+        return nextPoint;
+    }
+
+    private void correctPointByTileType(PairIntInt nextPoint, TileType nextTileType) {
         // максимально допустимое смещение машинки от центра тайла
         double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
         // коэфициент отклонения от текущий координаты в случае движения вертикально или горизонтально
         double koef = 0.2;
 
+        switch (nextTileType) {
+            case LEFT_TOP_CORNER:
+                nextPoint.first += cornerTileOffset;
+                nextPoint.second += cornerTileOffset;
+                break;
+            case RIGHT_TOP_CORNER:
+                nextPoint.first -= cornerTileOffset;
+                nextPoint.second += cornerTileOffset;
+                break;
+            case LEFT_BOTTOM_CORNER:
+                nextPoint.first += cornerTileOffset;
+                nextPoint.second -= cornerTileOffset;
+                break;
+            case RIGHT_BOTTOM_CORNER:
+                nextPoint.first -= cornerTileOffset;
+                nextPoint.second -= cornerTileOffset;
+                break;
+            case VERTICAL: /*if (mapTiles[curTileX][curTileY] == TileType.VERTICAL) */ {
+                nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
+                        + relativeX + (koef * (tileSize / 2 - relativeX)));
+            }
+            break;
+            case HORIZONTAL: /*if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL)*/ {
+                nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
+                        + relativeY + (koef * (tileSize / 2 - relativeY)));
+            }
+            break;
+            default:
+        }
+    }
+
+    /**
+     * вычисление условного типа следующего тайла например, если мы подъезжаем к
+     * Т-угольному перекрестку, а на нем поворачиваем влево то получим поворот
+     * ввлево
+     *
+     * @return LEFT_TOP_CORNER || RIGHT_TOP_CORNER || LEFT_BOTTOM_CORNER ||
+     * RIGHT_BOTTOM_CORNER || VERTICAL || HORIZONTAL
+     */
+    private TileType clasifyNextTile() {
         TileType nextTileType = TileType.UNKNOWN;
         switch (mapTiles[nextTile.first][nextTile.second]) {
             case LEFT_TOP_CORNER:
@@ -422,48 +469,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                         nextTileType = nnTile.first > curTile.first ? TileType.LEFT_TOP_CORNER : TileType.RIGHT_TOP_CORNER;
                         break;
                     }
-                    /*if (nnTile.first < curTile.first) {
-                     nextTileType = nnTile.second < curTile.second ? TileType.RIGHT_TOP_CORNER : TileType.RIGHT_BOTTOM_CORNER;
-                     break;
-                     }
-                     if (nnTile.first > curTile.first) {
-                     nextTileType = nnTile.second < curTile.second ? TileType.LEFT_TOP_CORNER : TileType.LEFT_BOTTOM_CORNER;
-                     break;
-                     }*/
                 }
         }
-
-        switch (nextTileType) {
-            case LEFT_TOP_CORNER:
-                nextPoint.first += cornerTileOffset;
-                nextPoint.second += cornerTileOffset;
-                break;
-            case RIGHT_TOP_CORNER:
-                nextPoint.first -= cornerTileOffset;
-                nextPoint.second += cornerTileOffset;
-                break;
-            case LEFT_BOTTOM_CORNER:
-                nextPoint.first += cornerTileOffset;
-                nextPoint.second -= cornerTileOffset;
-                break;
-            case RIGHT_BOTTOM_CORNER:
-                nextPoint.first -= cornerTileOffset;
-                nextPoint.second -= cornerTileOffset;
-                break;
-            case VERTICAL: /*if (mapTiles[curTileX][curTileY] == TileType.VERTICAL) */ {
-                nextPoint.first = (int) (nextPoint.first - 0.5 * tileSize
-                        + relativeX + (koef * (tileSize / 2 - relativeX)));
-            }
-            break;
-            case HORIZONTAL: /*if (mapTiles[curTileX][curTileY] == TileType.HORIZONTAL)*/ {
-                nextPoint.second = (int) (nextPoint.second - 0.5 * tileSize
-                        + relativeY + (koef * (tileSize / 2 - relativeY)));
-            }
-            break;
-            default:
-        }
-
-        return nextPoint;
+        return nextTileType;
     }
 
     /**
