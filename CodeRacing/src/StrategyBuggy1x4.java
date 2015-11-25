@@ -329,29 +329,37 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                 }
             }
         }
+        activateNitroIfNeed();
+    }
+
+    /**
+     * включаем нитро, если нужно
+     */
+    private void activateNitroIfNeed() {
+        if (world.getTick() < startTick) {
+            move.setUseNitro(false);
+            return;
+        }
         if (move.isBrake()) {
             move.setUseNitro(false);
             return;
         }
-        if (world.getTick() > startTick && abs(move.getEnginePower() - 1) < 0.01) {
+
+        int distToWall = distanceHelper.getDistanceToWallByCarDirection(PI / 360);
+        if (distToWall < 3 * tileSize) {
+            move.setUseNitro(false);
+            return;
+        }
+
+        if (abs(self.getEnginePower() - 1) < 0.01) {
             move.setUseNitro(true);
+            return;
         }
-        if (world.getTick() == startTick) {
-            move.setUseNitro(true);
-        }
-        int straightCountX = 0;
-        int straightCountY = 0;
-        for (PairIntInt tile : wayToNextKeyPoint) {
-            if (tile.first == curTile.first) {
-                straightCountX++;
-            }
-            if (tile.second == curTile.second) {
-                straightCountY++;
-            }
-        }
-        Vector speed = new Vector(curSpeed);
-        speed.normalize();
-        if (max(straightCountX, straightCountY) > 5 && (abs(speed.x) < 0.1 || abs(speed.y) < 0.1)) {
+
+        int beforeTurn = getTilesBeforeTurn();
+        Vector direct = new Vector(carDirection);
+        direct.normalize();
+        if (beforeTurn > 4 && (abs(direct.x) < 0.1 || abs(direct.y) < 0.1)) {
             move.setUseNitro(true);
         }
     }
