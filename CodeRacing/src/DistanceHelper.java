@@ -274,4 +274,13 @@ public class DistanceHelper {
         return getDistanceToWall(strategy.self, deltaAngle, directionVector);
     }
 
+    public int getDistanceToNearesOpCar(Car selfCar) {
+        int dist = tileSize * worldHeight;
+        Car[] cars = strategy.getOpCars();
+        for (Car car : cars) {
+            dist = (int) Math.min(dist, selfCar.getDistanceTo(car));
+        }
+        return dist;
+
+    }
 }
