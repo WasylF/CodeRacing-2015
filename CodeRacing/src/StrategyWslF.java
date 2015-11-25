@@ -375,7 +375,7 @@ public abstract class StrategyWslF {
      *
      * @return количество тайлов до ближайшего поворота
      */
-    protected int getTilesBeforeTirn() {
+    protected int getTilesBeforeTurn() {
         if (directToNextKeyPoint == null || directToNextKeyPoint.isEmpty()) {
             return 0;
         }
