@@ -401,7 +401,7 @@ public abstract class StrategyWslF {
         if (turnTile.first == -1) {
             return 0;
         }
-        return getTileDistance(curTile, turnTile);
+        return getTileDistance(curTile, turnTile) - 1;
     }
 
     /**
@@ -433,7 +433,7 @@ public abstract class StrategyWslF {
                 return wayToNextKeyPoint.get(i);
             }
         }
-        return new PairIntInt(-1, -1);
+        return wayToNextKeyPoint.get(wayToNextKeyPoint.size() - 1);
     }
 
     /**
