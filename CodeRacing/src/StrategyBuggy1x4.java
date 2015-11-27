@@ -92,7 +92,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         shouldGetBonus();
 
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
-        double angleToWaypoint = carDirection.getAngle(toNextWayPoint);
+        double angleToWaypoint = (carDirection.getAngle(toNextWayPoint) + 2 * curSpeed.getAngle(toNextWayPoint)) / 3;
 
         double wheelTurn = getWheelTurn(angleToWaypoint);
 
@@ -384,11 +384,21 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         correctPointByTileType(nextPoint, nextTileType);
 
         if (directToNextKeyPoint.size() > 2) {
-            //int curDirect = getCurDirection();
-            // если выполняем двойной поворот
-            if (directToNextKeyPoint.get(0) != directToNextKeyPoint.get(1)
-                    && directToNextKeyPoint.get(1) != directToNextKeyPoint.get(2)) {
-                correctPointDoubleTurn(nextPoint);
+            int curDirect = getCurDirection();
+            int dist = -(abs(curDirect) == 1 ? curDirect * relativeX : (curDirect / 2) * relativeY);
+            if (getTilesBeforeTurn() == 2 && dist < tileSize / 10) {
+                int nnDirect = directToNextKeyPoint.get(2);
+                if (abs(nnDirect) == 1) {
+                    nextPoint.first -= nnDirect * (tileSize / 3);
+                } else {
+                    nextPoint.second -= (nnDirect / 2) * (tileSize / 3);
+                }
+            } else {
+                // если выполняем двойной поворот
+                if (curDirect != directToNextKeyPoint.get(0)
+                        && directToNextKeyPoint.get(0) != directToNextKeyPoint.get(1)) {
+                    correctPointDoubleTurn(nextPoint);
+                }
             }
         }
 
@@ -396,20 +406,22 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     private void correctPointDoubleTurn(PairIntInt nextPoint) {
-        if (directToNextKeyPoint.size() < 3
-                || self.getDistanceTo(nextWayPoint.first, nextWayPoint.second) > tileSize / 2) {
+        if (directToNextKeyPoint == null
+                || directToNextKeyPoint.size() < 3
+                || self.getDistanceTo(nextPoint.first, nextPoint.second) > 9 * tileSize / 10) {
             return;
         }
 
-        //int curDirect = getCurDirection();
-        int curDirect = directToNextKeyPoint.get(0);
+        int curDirect = getCurDirection();
+        //int curDirect = directToNextKeyPoint.get(0);
         // едем почти прямо
-        if (curDirect == directToNextKeyPoint.get(2)) {
+        if (curDirect == directToNextKeyPoint.get(1)) {
+            int nextDirect = directToNextKeyPoint.get(0);
             // едем по х
-            if (abs(curDirect) == 1) {
-                nextPoint.first += curDirect * tileSize / 2;
+            if (abs(nextDirect) == 1) {
+                nextPoint.first += nextDirect * tileSize / 3;
             } else {
-                nextPoint.second += (curDirect / 2) * tileSize / 2;
+                nextPoint.second += (nextDirect / 2) * tileSize / 3;
                 // едем по у 
             }
         } else {

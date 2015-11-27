@@ -211,7 +211,7 @@ public class DistanceHelper {
         final int numberOfTurns = 40;
         double turnAngle;
 
-        int maxD = Math.max(worldWidth, worldHeight) * worldTileSize;
+        int maxD = Math.min(worldWidth, worldHeight) * worldTileSize;
         for (int d = 1; d < maxD; d++) {
             Vector vector = new Vector(directionVector);
             vector.rotateVector(-deltaAngle);

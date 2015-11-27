@@ -27,6 +27,16 @@ public final class MyStrategy implements Strategy {
          typeOfStrategy = 3;
          }
          }*/
+        Car[] cars = world.getCars();
+        int k = 0;
+        for (Car car : cars) {
+            if (car.isTeammate()) {
+                k++;
+            }
+        }
+        if (k > 1) {
+            return;
+        }
         if (myStrategy == null) {
             myStrategy = new StrategyBuggy1x4();
         }
