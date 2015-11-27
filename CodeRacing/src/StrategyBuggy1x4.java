@@ -163,8 +163,17 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
         double deltaAngle = PI / 30;
         int backDistance = distanceHelper.getDistanceToWallByOpCarDirection(deltaAngle);
+        if (backDistance > carHeight) {
+            backDistance = distanceHelper.getDistanceToWallByOpCarDirection(deltaAngle / 3);
+        }
         int forwardDistance = distanceHelper.getDistanceToWallByCarDirection(deltaAngle);
+        if (forwardDistance > carHeight) {
+            forwardDistance = distanceHelper.getDistanceToWallByCarDirection(deltaAngle / 3);
+        }
         int speedDistance = distanceHelper.getDistanceToWallBySpeed(deltaAngle);
+        if (speedDistance > carHeight) {
+            speedDistance = distanceHelper.getDistanceToWallBySpeed(deltaAngle / 3);
+        }
 
         //если уперлись задом в стенку, то нужно ехать вперед
         if (backDistance < carHeight) {
@@ -483,7 +492,7 @@ public class StrategyBuggy1x4 extends StrategyWslF {
      */
     private void correctPointByTileType(PairIntInt nextPoint, TileType nextTileType) {
         // максимально допустимое смещение машинки от центра тайла
-        double cornerTileOffset = (tileSize / 2) - (marginSize + carWidth / 2);
+        double cornerTileOffset = (tileSize / 2) - (marginSize + 2 * carWidth / 3);
         // коэфициент отклонения от текущий координаты в случае движения вертикально или горизонтально
         double koef = 0.2;
 
