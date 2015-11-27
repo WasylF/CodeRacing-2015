@@ -389,9 +389,13 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             if (getTilesBeforeTurn() == 2 && dist < tileSize / 10) {
                 int nnDirect = directToNextKeyPoint.get(2);
                 if (abs(nnDirect) == 1) {
-                    nextPoint.first -= nnDirect * (tileSize / 3);
+                    if (abs(relativeX - nextPoint.first) < (tileSize / 3)) {
+                        nextPoint.first -= nnDirect * (tileSize / 3);
+                    }
                 } else {
-                    nextPoint.second -= (nnDirect / 2) * (tileSize / 3);
+                    if (abs(relativeY - nextPoint.second) < (tileSize / 3)) {
+                        nextPoint.second -= (nnDirect / 2) * (tileSize / 3);
+                    }
                 }
             } else {
                 // если выполняем двойной поворот

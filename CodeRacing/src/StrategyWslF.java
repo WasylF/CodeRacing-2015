@@ -304,11 +304,14 @@ public abstract class StrategyWslF {
                 add = 1;
                 int vX = v / worldHW;
                 int vY = v % worldHW;
-                int vDirect = vX - cX + 2 * (vY - cY);
+                if (vX == 6 && vY == 13) {
+                    System.out.println("(" + cX + "," + cY + ") ");
+                }
+                int vDirect = getDirect(cX, cY, vX, vY);
                 if (direct[current] + vDirect == 0) {
                     add += fine180;
                 }
-                if ((direct[current] + vDirect) % 2 == 1) {
+                if (Math.abs((direct[current] + vDirect) % 2) == 1) {
                     add += fine90;
                 }
                 if ((dist[current] + add) < dist[v] && Math.abs(dist[v] - (dist[current] + add)) > 1e-1) {
@@ -320,6 +323,12 @@ public abstract class StrategyWslF {
             }
         }
 
+        for (int y = 0; y < worldHeight; y++) {
+            for (int x = 0; x < worldWidth; x++) {
+                System.out.print(dist[x * worldHW + y] + "  ");
+            }
+            System.out.println();
+        }
         LinkedList<PairIntInt> list = new LinkedList<>();
         list.addFirst(new PairIntInt(finish / worldHW, finish % worldHW));
         direction.addFirst(direct[finish]);
@@ -331,6 +340,15 @@ public abstract class StrategyWslF {
         }
 
         return list;
+    }
+
+    protected int getDirect(int cX, int cY, int nX, int nY) {
+        //vX - cX + 2 * (vY - cY);
+        if (cX != nX) {
+            return nX - cX;
+        } else {
+            return 2 * (nY - cY);
+        }
     }
 
     protected int getCurDirection() {
