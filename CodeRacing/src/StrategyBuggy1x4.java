@@ -106,15 +106,23 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     private boolean shouldGetBonus() {
         Bonus[] bonuses = world.getBonuses();
         for (Bonus bonus : bonuses) {
+            int tilesBeforeTurn = getTilesBeforeTurn();
+            if (tilesBeforeTurn == 0) {
+                return false;
+            }
             PairIntInt bonusCoordinate = new PairIntInt(bonus.getX(), bonus.getY());
             PairIntInt bonusTile = getTileOfObject(bonus.getX(), bonus.getY());
             if (getTileDistance(curTile, bonusTile) < 2) {
                 Vector toBonus = new Vector(bonus.getX() - self.getX(), bonus.getY() - self.getY());
                 Vector toWayPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint.first, nextWayPoint.second));
-                if (abs(toBonus.getAngle(toWayPoint)) > PI / 20) {
+                double angleToBonus = abs(toBonus.getAngle(toWayPoint));
+                if (angleToBonus > PI / 10) {
                     continue;
                 }
-                double angleToBonus = abs(curSpeed.getAngle(toBonus));
+                if (tilesBeforeTurn < 2 && angleToBonus > PI / 30) {
+                    continue;
+                }
+                angleToBonus = abs(curSpeed.getAngle(toBonus));
                 if ((angleToBonus < PI / 60)
                         || (angleToBonus < PI / 15 && self.getDistanceTo(bonus) > tileSize)
                         || (angleToBonus < PI / 10 && bonus.getType() == BonusType.PURE_SCORE)
@@ -386,6 +394,12 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         if (directToNextKeyPoint.size() > 2) {
             int curDirect = getCurDirection();
             int dist = -(abs(curDirect) == 1 ? curDirect * relativeX : (curDirect / 2) * relativeY);
+            if (dist < 0) {
+                dist += tileSize;
+            }
+            if (dist > tileSize) {
+                dist -= tileSize;
+            }
             if (getTilesBeforeTurn() == 2 && dist < tileSize / 10) {
                 int nnDirect = directToNextKeyPoint.get(2);
                 if (abs(nnDirect) == 1) {
@@ -410,25 +424,25 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     private void correctPointDoubleTurn(PairIntInt nextPoint) {
-        if (directToNextKeyPoint == null
-                || directToNextKeyPoint.size() < 3
-                || self.getDistanceTo(nextPoint.first, nextPoint.second) > 9 * tileSize / 10) {
-            return;
-        }
+        /* if (directToNextKeyPoint == null
+         || directToNextKeyPoint.size() < 3
+         || self.getDistanceTo(nextPoint.first, nextPoint.second) > 9 * tileSize / 10) {
+         return;
+         }
 
-        int curDirect = getCurDirection();
-        //int curDirect = directToNextKeyPoint.get(0);
-        // едем почти прямо
-        if (curDirect == directToNextKeyPoint.get(1)) {
-            int nextDirect = directToNextKeyPoint.get(0);
-            // едем по х
-            if (abs(nextDirect) == 1) {
-                nextPoint.first += nextDirect * tileSize / 3;
-            } else {
-                nextPoint.second += (nextDirect / 2) * tileSize / 3;
-                // едем по у 
-            }
-        } else {
+         int curDirect = getCurDirection();
+         //int curDirect = directToNextKeyPoint.get(0);
+         // едем почти прямо
+         if (curDirect == directToNextKeyPoint.get(1)) {
+         int nextDirect = directToNextKeyPoint.get(0);
+         // едем по х
+         if (abs(nextDirect) == 1) {
+         nextPoint.first += nextDirect * tileSize / 3;
+         } else {
+         nextPoint.second += (nextDirect / 2) * tileSize / 3;
+         // едем по у 
+         }
+         } else*/ {
             /*         // поворот на 180
              PairIntInt nnTile = wayToNextKeyPoint.get(1);
              // едем по х

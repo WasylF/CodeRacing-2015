@@ -322,13 +322,13 @@ public abstract class StrategyWslF {
                 }
             }
         }
-
-        for (int y = 0; y < worldHeight; y++) {
-            for (int x = 0; x < worldWidth; x++) {
-                System.out.print(dist[x * worldHW + y] + "  ");
-            }
-            System.out.println();
-        }
+        /*
+         for (int y = 0; y < worldHeight; y++) {
+         for (int x = 0; x < worldWidth; x++) {
+         System.out.print(dist[x * worldHW + y] + "  ");
+         }
+         System.out.println();
+         }*/
         LinkedList<PairIntInt> list = new LinkedList<>();
         list.addFirst(new PairIntInt(finish / worldHW, finish % worldHW));
         direction.addFirst(direct[finish]);
