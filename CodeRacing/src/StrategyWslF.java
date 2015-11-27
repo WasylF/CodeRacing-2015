@@ -404,6 +404,25 @@ public abstract class StrategyWslF {
         return getTileDistance(curTile, turnTile);
     }
 
+    /**
+     * прмерное расстояние до поворота
+     *
+     * @return
+     */
+    protected double getDistanceBeforeTurn() {
+        PairIntInt turnTile = getTurnTile();
+        if (turnTile.first == -1) {
+            return 0;
+        }
+        Point turnPoint = new Point((turnTile.first + 0.5) * tileSize, (turnTile.second + 0.5) * tileSize);
+        return self.getDistanceTo(turnPoint.x, turnPoint.y);
+    }
+
+    /**
+     * ближайший тайл, на котором поворачиваем
+     *
+     * @return
+     */
     protected PairIntInt getTurnTile() {
         if (directToNextKeyPoint == null || directToNextKeyPoint.isEmpty()) {
             return new PairIntInt(-1, -1);
