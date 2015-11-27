@@ -467,6 +467,27 @@ public abstract class StrategyWslF {
         Car[] cars = world.getCars();
         LinkedList<Car> list = new LinkedList<>();
         for (Car car : cars) {
+            if (!car.isFinishedTrack()
+                    && !car.isTeammate()) {
+                list.add(car);
+            }
+        }
+        cars = new Car[list.size()];
+        for (int i = list.size() - 1; i >= 0; i--) {
+            cars[i] = list.poll();
+        }
+        return cars;
+    }
+
+    /**
+     * возвращает машины опонентов еще не закончивших трасу
+     *
+     * @return
+     */
+    protected Car[] getOpAliveCars() {
+        Car[] cars = world.getCars();
+        LinkedList<Car> list = new LinkedList<>();
+        for (Car car : cars) {
             if (!car.isFinishedTrack() && car.getDurability() != 0
                     && !car.isTeammate()) {
                 list.add(car);
@@ -478,4 +499,5 @@ public abstract class StrategyWslF {
         }
         return cars;
     }
+
 }
