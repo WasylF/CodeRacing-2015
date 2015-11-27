@@ -104,6 +104,10 @@ public class StrategyBuggy1x4 extends StrategyWslF {
     }
 
     private boolean shouldGetBonus() {
+        PairIntInt turnTile = getTurnTile();
+        Vector toTurnTile = new Vector(turnTile.first - curTileX, turnTile.second - curTileY);
+        double distToBonus = worldHeight * tileSize;
+
         Bonus[] bonuses = world.getBonuses();
         for (Bonus bonus : bonuses) {
             int tilesBeforeTurn = getTilesBeforeTurn();
@@ -112,7 +116,14 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             }
             PairIntInt bonusCoordinate = new PairIntInt(bonus.getX(), bonus.getY());
             PairIntInt bonusTile = getTileOfObject(bonus.getX(), bonus.getY());
-            if (getTileDistance(curTile, bonusTile) < 2) {
+            Vector toBonusTile = new Vector(bonusTile.first - curTileX, bonusTile.second - curTileY);
+            // если бонус не по пути
+            if (toTurnTile.getPositiveAngle(toBonusTile) > 1e-1) {
+                continue;
+            }
+            double dist = self.getDistanceTo(bonus);
+            if (getTileDistance(curTile, bonusTile) <= 2
+                    || getDistanceBeforeTurn() > dist) {
                 Vector toBonus = new Vector(bonus.getX() - self.getX(), bonus.getY() - self.getY());
                 Vector toWayPoint = new Vector(new Point(self.getX(), self.getY()), new Point(nextWayPoint.first, nextWayPoint.second));
                 double angleToBonus = abs(toBonus.getAngle(toWayPoint));
@@ -123,20 +134,22 @@ public class StrategyBuggy1x4 extends StrategyWslF {
                     continue;
                 }
                 angleToBonus = abs(curSpeed.getAngle(toBonus));
-                if ((angleToBonus < PI / 60)
+                if ((dist < distToBonus)
+                        && ((angleToBonus < PI / 60)
                         || (angleToBonus < PI / 15 && self.getDistanceTo(bonus) > tileSize)
                         || (angleToBonus < PI / 10 && bonus.getType() == BonusType.PURE_SCORE)
                         || (angleToBonus < PI / 10 && self.getDurability() < 0.9
                         && bonus.getType() == BonusType.REPAIR_KIT)
                         || (angleToBonus < PI / 20 && self.getDurability() < 0.5
-                        && bonus.getType() == BonusType.REPAIR_KIT)) {
+                        && bonus.getType() == BonusType.REPAIR_KIT))) {
                     nextWayPoint = bonusCoordinate;
-                    return true;
+                    distToBonus = self.getDistanceTo(bonus);
+                    //return true;
                 }
 
             }
         }
-        return false;
+        return abs(distToBonus - worldHeight * tileSize) > 1;
     }
 
     /**
@@ -200,9 +213,9 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         // если мы начали движение назад на текущем тике выворачиваем руль в противоположную сторону
         //иначе оставляем как на предыдущем ходе
         move.setWheelTurn(goBack == numberOfTickToGoBack ? -prevWheelTurn : prevWheelTurn);
-
-        int minDist = min(distanceHelper.getDistanceToWallByCarDirection(PI / 90),
-                distanceHelper.getDistanceToWallBySpeed(PI / 90));
+        double deltaAngle = PI / 20;
+        int minDist = min(distanceHelper.getDistanceToWallByCarDirection(deltaAngle),
+                distanceHelper.getDistanceToWallBySpeed(deltaAngle));
         minDist = min(minDist, distanceHelper.getDistanceToNearesOpCar(self));
         move.setUseNitro(false);
         if (minDist > 3 * carHeight) {//если пора заканчивать движение назад
