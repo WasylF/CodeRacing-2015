@@ -409,13 +409,13 @@ public abstract class StrategyWslF {
      *
      * @return
      */
-    protected double getDistanceBeforeTurn() {
+    protected int getDistanceBeforeTurn() {
         PairIntInt turnTile = getTurnTile();
         if (turnTile.first == -1) {
             return 0;
         }
         Point turnPoint = new Point((turnTile.first + 0.5) * tileSize, (turnTile.second + 0.5) * tileSize);
-        return self.getDistanceTo(turnPoint.x, turnPoint.y);
+        return (int) self.getDistanceTo(turnPoint.x, turnPoint.y);
     }
 
     /**
