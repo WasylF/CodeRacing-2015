@@ -273,14 +273,23 @@ public class StrategyBuggy1x4 extends StrategyWslF {
         }
         Vector toNextWayPoint = new Vector(nextWayPoint.first - self.getX(), nextWayPoint.second - self.getY());
         angleToWaypoint = carDirection.getAngle(toNextWayPoint);
+        /*
+         if (abs(angleToWaypoint) > PI / 3
+         && abs(angleToWaypoint) * speed.length() * speed.length() > 2.5D * 2.5D * PI) {
+         move.setBrake(true);
+         return;
+         }*/
+        int tilesBeforeTurn = getTilesBeforeTurn();
+        int distanceBeforeTurn = getDistanceBeforeTurn();
 
-        if (abs(angleToWaypoint) > PI / 3
-                && abs(angleToWaypoint) * speed.length() * speed.length() > 2.5D * 2.5D * PI) {
+        if ((distanceBeforeTurn <= tileSize * 2 && speed.length() > 20)
+                || (tilesBeforeTurn <= 2 && speed.length() > 40)
+                || (tilesBeforeTurn <= 3 && speed.length() > 45)) {
+            move.setUseNitro(false);
             move.setBrake(true);
             return;
         }
-
-        if (speed.length() > 10 && willTurn(nextTile.first, nextTile.second)
+        if (speed.length() > 15 && tilesBeforeTurn <= 1
                 && abs(angleToWaypoint) > PI / 180) {
             // если проехали больше половины тайла
             if (mapTiles[curTileX][curTileY] == TileType.VERTICAL
@@ -403,11 +412,11 @@ public class StrategyBuggy1x4 extends StrategyWslF {
             if (getTilesBeforeTurn() == 2 && dist < tileSize / 10) {
                 int nnDirect = directToNextKeyPoint.get(2);
                 if (abs(nnDirect) == 1) {
-                    if (abs(relativeX - nextPoint.first) < (tileSize / 3)) {
+                    if (abs(self.getX() - nextPoint.first) < (tileSize / 3)) {
                         nextPoint.first -= nnDirect * (tileSize / 3);
                     }
                 } else {
-                    if (abs(relativeY - nextPoint.second) < (tileSize / 3)) {
+                    if (abs(self.getY() - nextPoint.second) < (tileSize / 3)) {
                         nextPoint.second -= (nnDirect / 2) * (tileSize / 3);
                     }
                 }
