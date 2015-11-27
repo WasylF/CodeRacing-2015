@@ -304,9 +304,6 @@ public abstract class StrategyWslF {
                 add = 1;
                 int vX = v / worldHW;
                 int vY = v % worldHW;
-                if (vX == 6 && vY == 13) {
-                    System.out.println("(" + cX + "," + cY + ") ");
-                }
                 int vDirect = getDirect(cX, cY, vX, vY);
                 if (direct[current] + vDirect == 0) {
                     add += fine180;
@@ -400,18 +397,24 @@ public abstract class StrategyWslF {
      * @return количество тайлов до ближайшего поворота
      */
     protected int getTilesBeforeTurn() {
-        if (directToNextKeyPoint == null || directToNextKeyPoint.isEmpty()) {
+        PairIntInt turnTile = getTurnTile();
+        if (turnTile.first == -1) {
             return 0;
         }
+        return getTileDistance(curTile, turnTile);
+    }
+
+    protected PairIntInt getTurnTile() {
+        if (directToNextKeyPoint == null || directToNextKeyPoint.isEmpty()) {
+            return new PairIntInt(-1, -1);
+        }
         int dir = directToNextKeyPoint.get(0);
-        int ans = 1;
         for (int i = 1; i < directToNextKeyPoint.size(); i++) {
             if (directToNextKeyPoint.get(i) != dir) {
-                return ans;
+                return wayToNextKeyPoint.get(i);
             }
-            ans++;
         }
-        return ans;
+        return new PairIntInt(-1, -1);
     }
 
     /**
